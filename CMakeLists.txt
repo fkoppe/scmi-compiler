@@ -4,4 +4,7 @@ project(scmi-compiler)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(scmi main.cpp)
+add_executable(scmi main.cpp
+        tokens.hpp
+        lexer.hpp
+        lexer.cpp)
