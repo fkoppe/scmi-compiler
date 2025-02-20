@@ -1,0 +1,7 @@
+.idea/
+cmake-build-debug/
+
+.directory
+.kdev4
+build*
+CMakeLists.txt.user
