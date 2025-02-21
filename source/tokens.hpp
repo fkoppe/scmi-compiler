@@ -5,7 +5,9 @@
 #ifndef TOKENS_HPP
 #define TOKENS_HPP
 
+#include <string>
 #include <vector>
+using namespace std;
 
 enum TokenType {
     KEYWORD,
@@ -22,7 +24,12 @@ enum TokenType {
     COMMA,
 };
 
+struct Token {
+    TokenType type;
+    string value;
+};
+
 const char* tokenTypeName(TokenType name);
-void printTokens(std::vector<TokenType> tokens);
+void printTokens(std::vector<Token> tokens);
 
 #endif //TOKENS_HPP

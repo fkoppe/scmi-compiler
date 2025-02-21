@@ -4,9 +4,11 @@
 
 #include "lexer.hpp"
 
+#include <fstream>
 #include <string>
 #include <unordered_set>
 #include <iostream>
+
 
 const unordered_set<string> KEYWORD_SET = {
     "void",
@@ -18,17 +20,27 @@ const unordered_set<string> KEYWORD_SET = {
 };
 
 string readFile(const string& path) {
-    return "error";
+    ifstream file(path, std::ios::ate);  // Open in "ate" mode to get file size
+    if (!file) {
+        throw std::runtime_error("Could not open file: " + path);
+    }
+    const streamsize size = file.tellg();  // Get file size
+    file.seekg(0);  // Move back to the beginning of the file
+    string content = string(size, '\0');
+    file.read(content.data(), size);  // Read file content into string
+    return content;
 }
 
-vector<TokenType> lexString(const string& data) {
+vector<Token> lexString(const string& data) {
     const string whiteSpaceData = removeWhitespace(data);
     vector<string> splitData = split(whiteSpaceData, ' ');
-    vector<TokenType> result;
+
+    vector<Token> result;
     result.reserve(splitData.size());
 
     for (const string& x : splitData) {
-        result.push_back(getToken(x));
+        Token token = {getToken(x),x};
+        result.push_back(token);
     }
 
     return result;
@@ -91,16 +103,16 @@ TokenType getToken(const string& word) {
 string removeWhitespace(const string& word) {
     string result;
     const unordered_set noWhiteSpaceSymbols = {'(', ')', '{', '}', ';', ',', '[', ']', '='};
+    const unordered_set skipSymbols = {' ', '\n', '\r', '\t'};
+
     const char whitespace = ' ';
-
-
-    bool space = word[0] == ' ';
+    bool space = skipSymbols.count(word[0]);
 
     for (int i = 1; i < word.size(); i++) {
         char cur = word[i];
 
         if (space) {
-            if (cur != ' ') {
+            if (!skipSymbols.count(cur)) {
                 space = false;
 
                 if (noWhiteSpaceSymbols.count(cur)) {
@@ -115,7 +127,7 @@ string removeWhitespace(const string& word) {
             }
         }
         else {
-            if (cur == ' ') {
+            if (skipSymbols.count(cur)) {
                 space = true;
             }
             else {

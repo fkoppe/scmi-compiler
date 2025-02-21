@@ -13,7 +13,7 @@ using namespace std;
 
 string readFile(const string& path);
 
-vector<TokenType> lexString(const string& data);
+vector<Token> lexString(const string& data);
 string removeWhitespace(const string& word);
 void replaceAll(string& result, const string& from, const string& to);
 vector<string> split(const string& str, char delimiter);
