@@ -9,7 +9,7 @@
 class ASTNode {
 public:
     virtual ~ASTNode() = default;
-    virtual void print(int indent = 0) const = 0; // Debug-Ausgabe des AST
+    virtual void print(int indent = 0) const = 0;
 };
 
 // AST-Knoten für Zahlen

@@ -13,6 +13,8 @@ private:
     size_t current;
 
     Token peek();
+    Token peek2();
+    Token peek3();
     Token advance();
     bool match(TokenType expected);
     void expect(TokenType expected, const std::string& errorMessage);
