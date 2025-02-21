@@ -1,5 +1,11 @@
-  void main(   int y, int z){
-    int x = 0x5464 ;
-    double y= 3345;
-    test();
+int ggt(int x, int y) {
+    int i = x;
+    int j = y;
 }
+
+
+void main () {
+    int i = 0;
+    int y = i;
+}
+

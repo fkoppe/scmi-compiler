@@ -6,6 +6,7 @@
 #define COMPILER_HPP
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "ast.h"
@@ -19,21 +20,30 @@ struct Variable {
     string address;
 };
 
+const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
+    "int","short","char","float","double","return","void"
+};
+
 class Function {
     public:
-        explicit Function(const FunctionDefinitionNode& functionNode);
+        explicit Function(const shared_ptr<FunctionDefinitionNode>& functionNode);
 
         void addLocalVariable(const VariableDeclarationNode &declaration_node);
+        void addInputVariable(const pair<string,string>& parameter);
+        string getOutput();
 
 
     private:
         vector<Variable> variableList;
         string output;
         int localVariablePointerOffset;
+        int paramaterPointerOffset;
         Variable findVariable(const string& name);
 
 };
 
+
+void checkForbiddenIdentifier(const string& name);
 int getSize(const string& type);
 string getMiType(const string& type);
 #endif //COMPILER_HPP

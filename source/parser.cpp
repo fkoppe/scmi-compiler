@@ -171,7 +171,7 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
 
             std::vector<std::shared_ptr<ASTNode>> arrayValues;
             do {
-                arrayValues.push_back(parseriableDeclaration(int g)Expression());
+                //arrayValues.push_back(parseriableDeclaration(int g)Expression());
             } while (match(TokenType::COMMA));
 
             expect(TokenType::R_BRACE, "Expected '}' to close array initialization");
