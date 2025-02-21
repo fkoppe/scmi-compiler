@@ -12,22 +12,28 @@
 
 using namespace std;
 
-string compile(vector<shared_ptr<ASTNode>> ast);
+string compile(const vector<shared_ptr<ASTNode>>& ast);
 
 struct Variable {
     string name;
-    string adress;
+    string address;
 };
 
 class Function {
     public:
-        explicit Function(FunctionDefinitionNode functionNode);
+        explicit Function(const FunctionDefinitionNode& functionNode);
 
-        void addVariable(VariableDeclarationNode declaration_node);
+        void addLocalVariable(const VariableDeclarationNode &declaration_node);
+
 
     private:
         vector<Variable> variableList;
+        string output;
+        int localVariablePointerOffset;
+        Variable findVariable(const string& name);
 
 };
 
+int getSize(const string& type);
+string getMiType(const string& type);
 #endif //COMPILER_HPP
