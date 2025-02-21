@@ -1,0 +1,9 @@
+target_sources(
+    scmi
+    PRIVATE
+    lexer.hpp
+    lexer.cpp
+    parser.hpp
+    parser.cpp
+    tokens.hpp
+)

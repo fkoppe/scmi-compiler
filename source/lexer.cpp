@@ -4,10 +4,21 @@
 
 #include "lexer.hpp"
 
+#include <string>
 #include <unordered_set>
+#include <iostream>
+
+const unordered_set<string> KEYWORD_SET = {
+    "void",
+    "int",
+    "short",
+    "char",
+    "float",
+    "double",
+};
 
 string readFile(const string& path) {
-
+    return "error";
 }
 
 vector<TokenType> lexString(const string& data) {
@@ -19,6 +30,8 @@ vector<TokenType> lexString(const string& data) {
     for (const string& x : splitData) {
         result.push_back(getToken(x));
     }
+
+    return result;
 }
 
 vector<string> split(const string& str, char delimiter) {
@@ -37,26 +50,42 @@ vector<string> split(const string& str, char delimiter) {
 }
 
 TokenType getToken(const string& word) {
-    /*switch (word) {
-        case "int":
-        case "short":
-        case "char":
-        case "void":
-        case "float":
-        case "double":
-            return KEYWORD;
-        case "{":
-            return L_BRACK;
-        case "}":
-            return R_BRACK;
-        case "(":
+    if(KEYWORD_SET.count(word)) {
+        return KEYWORD;
+    }
+
+    switch (word[0]) {
+        case '{':
+            return L_BRACE;
+        case '}':
+            return R_BRACE;
+        case '(':
             return L_PAREN;
-        case ")":
+        case ')':
             return R_PAREN;
-        case "=":
+        case '[':
+            return L_BRACK;
+        case ']':
+            return R_BRACK;
+        case '=':
             return ASSIGN;
-    }*/
-    return ASSIGN;
+        case ';':
+            return SEMICOLON;
+        case ',':
+            return COMMA;
+    };
+
+    if(isalpha(word[0])) {
+        return IDENTIFIER;
+    }
+
+    if(isdigit(word[0])) {
+        return NUMBER;
+    }
+
+    cout << "encountered unrecognized symbol: " << word << endl;
+
+    exit(-1);
 }
 
 string removeWhitespace(const string& word) {
