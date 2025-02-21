@@ -11,7 +11,7 @@ using namespace std;
 #include <vector>
 #include <sstream>
 
-string readFile(const string& path);
+std::string readFile(const std::string& path);
 
 vector<Token> lexString(const string& data);
 string removeWhitespace(const string& word);

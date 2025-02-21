@@ -23,6 +23,7 @@ enum TokenType {
     NUMBER_HEX,
     SEMICOLON,
     COMMA,
+    END_OF_FILE,
 };
 
 struct Token {

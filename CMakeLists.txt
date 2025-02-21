@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(scmi source/main.cpp
-    source/tokens.cpp)
+    source/tokens.cpp
+    source/ast.h)
 
 add_subdirectory(source)
