@@ -13,6 +13,14 @@ Token Parser::peek() {
     return (current < tokens.size()) ? tokens[current] : Token{TokenType::END_OF_FILE, ""};
 }
 
+Token Parser::peek2() {
+    return (current < tokens.size() - 1) ? tokens[current + 1] : Token{TokenType::END_OF_FILE, ""};
+}
+
+Token Parser::peek3() {
+    return (current < tokens.size() - 2) ? tokens[current + 2] : Token{TokenType::END_OF_FILE, ""};
+}
+
 // Consume the current token and move forward
 Token Parser::advance() {
     return (current < tokens.size()) ? tokens[current++] : Token{TokenType::END_OF_FILE, ""};
@@ -30,7 +38,7 @@ bool Parser::match(TokenType expected) {
 // Expect a specific token, throw error if missing
 void Parser::expect(TokenType expected, const std::string& errorMessage) {
     if (!match(expected)) {
-        std::cerr << "Parse Error: " << errorMessage << "\n";
+        std::cerr << "Parse Error: " << errorMessage << " but found '" << peek().value << "' instead\n";
         exit(1);
     }
 }
@@ -82,7 +90,7 @@ std::shared_ptr<ASTNode> Parser::parseFunctionCall() {
 // Parse a statement (expression followed by a semicolon)
 std::shared_ptr<ASTNode> Parser::parseStatement() {
     // Handle function definition: keyword identifier ( keyword identifier , keyword identifier ) { ... }
-    if (peek().type == TokenType::KEYWORD) {
+    if (peek().type == TokenType::KEYWORD && peek3().type == TokenType::L_PAREN) {
         std::string returnType = tokens[current].value;
         advance(); // Consume keyword
 
@@ -116,8 +124,8 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
         return std::make_shared<FunctionDefinitionNode>(returnType, functionName, parameters, body);
     }
 
-    // Handle variable declaration: keyword identifier = number ;
-    if (peek().type == TokenType::KEYWORD) {
+    // Handle variable declaration: keyword identifier = ... ;
+    if (peek().type == TokenType::KEYWORD && peek3().type == TokenType::ASSIGN) {
         std::string varType = tokens[current].value;
         advance();
 
@@ -125,7 +133,16 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
         std::string varName = tokens[current - 1].value;
 
         expect(TokenType::ASSIGN, "Expected '=' in variable declaration");
-        auto value = parseExpression();
+
+        std::shared_ptr<ASTNode> value;
+
+        //function call: id()
+        if(peek2().type == TokenType::L_PAREN) {
+            value = parseFunctionCall();
+        } else {
+            //expression: exp
+            value = parseExpression();
+        }
 
         expect(TokenType::SEMICOLON, "Expected ';' at the end of declaration");
         return std::make_shared<VariableDeclarationNode>(varType, varName, value);
@@ -154,7 +171,7 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
 
             std::vector<std::shared_ptr<ASTNode>> arrayValues;
             do {
-                arrayValues.push_back(parseExpression());
+                arrayValues.push_back(parseriableDeclaration(int g)Expression());
             } while (match(TokenType::COMMA));
 
             expect(TokenType::R_BRACE, "Expected '}' to close array initialization");
