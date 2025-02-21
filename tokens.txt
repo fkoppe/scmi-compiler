@@ -6,6 +6,7 @@ R_BRACK
 
 keyword identifier = number
 => MOVE <size> I <number> , <identifier>
+------------------------------------------
 
 keyword identifier ( keyword identifier ) { ... }
 =>
@@ -23,3 +24,9 @@ MOVE W <return value> , <ALL_INPUT_BYTES>+64+!R13
 MOVE W R13,SP
 POPR
 RET
+----------------
+
+identifier ( ... )
+=>
+
+CALL <identifier>

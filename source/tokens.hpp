@@ -20,6 +20,7 @@ enum TokenType {
     R_BRACE,
     ASSIGN,
     NUMBER,
+    NUMBER_HEX,
     SEMICOLON,
     COMMA,
 };

@@ -24,6 +24,8 @@ const char* tokenTypeName(TokenType name){
         return "=";
     case NUMBER:
         return "number";
+    case NUMBER_HEX:
+        return "number_hex";
     case SEMICOLON:
         return ";";
     case COMMA:

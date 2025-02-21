@@ -1,4 +1,5 @@
   void main(   int y, int z){
-    int x = 4 ;
-    double y=3;
+    int x = 0x5464 ;
+    double y= 3345;
+    test();
 }

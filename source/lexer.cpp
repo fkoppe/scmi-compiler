@@ -92,9 +92,31 @@ TokenType getToken(const string& word) {
     }
 
     if(isdigit(word[0])) {
-        return NUMBER;
-    }
+        bool hex = false;
 
+
+        if (word[1] == 'x') {
+            hex = true;
+        }
+
+        bool digit = true;
+        for (int i = hex ? 2 : 1; i < word.length(); i++) {
+            if (!isdigit(word[i])) {
+                digit = false;
+                break;
+            }
+        }
+
+        if (digit) {
+            if (hex) {
+                return NUMBER_HEX;
+            }
+            return NUMBER;
+        }
+
+        cout << "found invalid number declaration: " << word << endl;
+        exit(-1);
+    }
     cout << "encountered unrecognized symbol: " << word << endl;
 
     exit(-1);
