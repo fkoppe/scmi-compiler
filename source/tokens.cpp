@@ -33,9 +33,9 @@ const char* tokenTypeName(TokenType name){
     }
 }
 
-void printTokens(std::vector<TokenType> tokens) {
+void printTokens(std::vector<Token> tokens) {
     for(int i = 0; i < tokens.size(); i++) {
-        std::cout << tokenTypeName(tokens[i]) << " ";
+        std::cout << tokenTypeName(tokens[i].type) << " ";
     }
 
     std::cout << std::endl;

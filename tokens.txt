@@ -1,3 +1,25 @@
 KEYWORD IDENTIFIER L_PAREN R_PAREN L_BRACK
     KEYWORD IDENTIFIER EQUALS NUMBER SEMICOLON
 R_BRACK
+
+
+
+keyword identifier = number
+=> MOVE <size> I <number> , <identifier>
+
+keyword identifier ( keyword identifier ) { ... }
+=>
+identifier:
+PUSHR
+MOVE W SP,R13
+
+<for input params:
+    save variable: <input byte offset>+64+!R13
+>
+
+<function body>
+
+MOVE W <return value> , <ALL_INPUT_BYTES>+64+!R13
+MOVE W R13,SP
+POPR
+RET

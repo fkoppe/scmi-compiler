@@ -5,7 +5,11 @@
 #include "parser.hpp"
 
 int main() {
-    auto tokens = lexString("  void main(int y,int z){    int x = 5;long y=3;   const int[5  ] y = {1,  2, 3   , 4,  5};    y[4] = 4;    print(y); }    ");
+    auto tokens = lexString("  void main(){ int i = 0; }");
+    //auto tokens = lexString("  void main(int y,int z){    int x = 0x5;long y=3;   const int[5  ] y = {1,  2, 3   , 4,  5};    y[4] = 4;    print(y); }    ");
+
+    Token eof = { END_OF_FILE, "" };
+    tokens.push_back(eof);
 
     printTokens(tokens);
 

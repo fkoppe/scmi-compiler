@@ -13,11 +13,11 @@ using namespace std;
 
 std::string readFile(const std::string& path);
 
-vector<TokenType> lexString(const std::string& data);
-std::string removeWhitespace(const std::string& word);
-void replaceAll(std::string& result, const std::string& from, const std::string& to);
-vector<std::string> split(const std::string& str, char delimiter);
-TokenType getToken(const std::string& word);
+vector<Token> lexString(const string& data);
+string removeWhitespace(const string& word);
+void replaceAll(string& result, const string& from, const string& to);
+vector<string> split(const string& str, char delimiter);
+TokenType getToken(const string& word);
 
 
 #endif //LEXER_HPP
