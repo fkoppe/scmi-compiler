@@ -30,6 +30,8 @@ const char* tokenTypeName(TokenType name){
         return ";";
     case COMMA:
         return ",";
+    case END_OF_FILE:
+        return "EOF";
     default:
         return "ERROR";
     }
