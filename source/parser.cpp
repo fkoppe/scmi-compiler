@@ -226,6 +226,29 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
         exit(1);
     }
 
+    //return, goto, continue, break
+    if (peek().type == TokenType::CONTROL) {
+        advance();
+        std::string name = tokens[current - 1].value;
+
+        if(peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER || peek().type == TokenType::NUMBER_HEX) {
+            if(peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_PAREN) {
+                auto st = parseStatement();
+
+                return std::make_shared<ReturnValueNode>(st);
+            }
+
+            auto expr = parseExpression();
+            std::string expression = tokens[current - 1].value;
+            expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
+
+            return std::make_shared<ReturnValueNode>(expr);
+        } else {
+            expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
+            return std::make_shared<ReturnNode>();
+        }
+    }
+
     std::cerr << "Parse Error: Unexpected statement (" << tokenTypeName(peek().type) << ": " << peek().value << ")\n";
     exit(1);
 }

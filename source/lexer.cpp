@@ -6,18 +6,7 @@
 
 #include <fstream>
 #include <string>
-#include <unordered_set>
 #include <iostream>
-
-
-const unordered_set<string> KEYWORD_SET = {
-    "void",
-    "int",
-    "short",
-    "char",
-    "float",
-    "double",
-};
 
 string readFile(const string& path) {
     ifstream file(path, std::ios::ate);  // Open in "ate" mode to get file size
@@ -64,6 +53,10 @@ vector<string> split(const string& str, char delimiter) {
 TokenType getToken(const string& word) {
     if(KEYWORD_SET.count(word)) {
         return KEYWORD;
+    }
+
+    if(CONTROL_SET.count(word)) {
+        return CONTROL;
     }
 
     switch (word[0]) {

@@ -7,7 +7,7 @@
 
 int main() {
     //auto tokens = lexString(readFile("../code.sc"));
-    auto tokens = lexString("void main(int y,int z){int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); }");
+    auto tokens = lexString("void main(int y,int z){int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return; return ggt(); }");
 
     Token eof = { END_OF_FILE, "" };
     tokens.push_back(eof);

@@ -68,6 +68,29 @@ public:
     }
 };
 
+// AST-Knoten für return
+class ReturnNode : public ASTNode {
+public:
+    explicit ReturnNode() {}
+
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "Return\n";
+    }
+};
+
+// AST-Knoten für return
+class ReturnValueNode : public ASTNode {
+public:
+    std::shared_ptr<ASTNode> value;
+
+    explicit ReturnValueNode(std::shared_ptr<ASTNode> val) : value(val) {}
+
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "ReturnValue\n";
+        value->print(indent + 2);
+    }
+};
+
 class FunctionDefinitionNode : public ASTNode {
 public:
     std::string returnType;
