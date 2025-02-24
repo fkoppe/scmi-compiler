@@ -4,6 +4,7 @@
 #include "tokens.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "semantic_analyzer.hpp"
 
 int main() {
     //auto tokens = lexString(readFile("../code.sc"));
@@ -12,19 +13,32 @@ int main() {
     Token eof = { END_OF_FILE, "" };
     tokens.push_back(eof);
 
+    std::cout << "=== LEXER Output ===\n";
     printTokens(tokens);
 
     try {
         Parser parser = Parser(tokens);
         std::vector<std::shared_ptr<ASTNode>> ast = parser.parse();
 
-        std::cout << "=== AST Output ===\n";
+        std::cout << "\n\n=== AST Output ===\n";
 
         for (const auto& node : ast) {
             node->print();
         }
 
-        cout << compile(ast);
+
+
+        // Run semantic analysis
+        std::cout << "\n=== Running Semantic Analysis ===\n";
+        SemanticAnalyzer analyzer;
+        analyzer.analyze(ast);
+
+        std::cout << "Semantic analysis successful!\n";
+
+
+        std::cout << "\n\n=== COMPILE Output ===\n";
+
+        cout << compile(ast) << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << e.what() << "\n";
