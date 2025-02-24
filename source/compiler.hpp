@@ -57,6 +57,8 @@ class Function {
         Variable findVariable(const string& name);
         FunctionDescr findFunctionDescr(const string& name);
         string getFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node, const FunctionDescr& function_call_type);
+        string getAssigment(const Variable& assign_variable, const shared_ptr<ASTNode>& node_expression);
+
 
 
 };

@@ -24,6 +24,14 @@ Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const
         if (shared_ptr<VariableDeclarationNode> variable_declaration_node = dynamic_pointer_cast<VariableDeclarationNode>(bodyElement)) {
             addLocalVariable(*variable_declaration_node);
         }
+        if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
+            FunctionDescr function_descr = findFunctionDescr(function_call_node->functionName);
+            output += getFunctionCall(function_call_node, function_descr);
+            output += "ADD W I " + to_string(function_descr.type.size) + ",SP\n";
+        }
+        if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
+            output += getAssigment(findVariable(assignment_node->variable->name), assignment_node->expression);
+        }
     }
 
     output += "MOVE W R13,SP\n";
@@ -44,31 +52,14 @@ void Function::addInputVariable(const pair<string,string>& parameter) {
 void Function::addLocalVariable(const VariableDeclarationNode& declaration_node) {
     checkForbiddenIdentifier(declaration_node.varName);
 
-    string declarationValue;
-
-    if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(declaration_node.value)) {
-        declarationValue = "I " + to_string(numberNode->value);
-    } else if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(declaration_node.value)) {
-        const Variable var = findVariable(identifier_node->name);
-        declarationValue = var.address;
-    } else if (const shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(declaration_node.value)) {
-        FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
-        output += getFunctionCall(function_call_node, function_call_type);
-        output += "MOVE " + getMiType(function_call_type.type.name) + " !SP+,R0\n";
-        declarationValue = "R0";
-    }
-    else {
-        return;
-    }
-
     const int varSize = getSize(declaration_node.varType);
     localVariablePointerOffset += varSize;
     const string address = "-"+to_string(localVariablePointerOffset) + "+!R13";
-    variableList.push_back({declaration_node.varName, address, {declaration_node.varType, varSize}});
-
+    Variable localVariable = {declaration_node.varName, address, {declaration_node.varType, varSize}};
+    variableList.push_back(localVariable);
 
     output += "SUB W I " + to_string(varSize) + ",SP\n";
-    output += "MOVE " + getMiType(declaration_node.varType) + " " + declarationValue + "," + address + "\n";
+    output += getAssigment(localVariable, declaration_node.value);
 }
 
 FunctionDescr Function::findFunctionDescr(const string& name) {
@@ -188,6 +179,29 @@ string getMiType(const string& type) {
     exit(-1);
 }
 
+string Function::getAssigment(const Variable& assign_variable, const shared_ptr<ASTNode>& node_expression) {
+    string result;
+    string declarationValue;
+
+    if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node_expression)) {
+        declarationValue = "I " + to_string(numberNode->value);
+    } else if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node_expression)) {
+        const Variable var = findVariable(identifier_node->name);
+        declarationValue = var.address;
+    } else if (const shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(node_expression)) {
+        FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
+        output += getFunctionCall(function_call_node, function_call_type);
+        output += "MOVE " + getMiType(function_call_type.type.name) + " !SP+,R0\n";
+        declarationValue = "R0";
+    }
+    else {
+        return "";
+    }
+
+    result += "MOVE " + getMiType(assign_variable.type.name) + " " + declarationValue + "," + assign_variable.address + "\n";
+    return result;
+}
+
 string compile(const vector<shared_ptr<ASTNode>>& ast) {
     vector<FunctionDescr> functionTypes;
 
@@ -196,7 +210,8 @@ string compile(const vector<shared_ptr<ASTNode>>& ast) {
     string startOutput;
     startOutput += "SEG\n";
     startOutput += "MOVE W I H'00FFFF',SP\n";
-    startOutput += "JUMP main\n";
+    startOutput += "CALL main\n";
+    startOutput += "HALT\n";
 
 
     vector<shared_ptr<FunctionDefinitionNode>> functionDefinitions;

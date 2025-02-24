@@ -1,12 +1,12 @@
-int ggt(int x, int y) {
-    int i = x;
-    int j = y;
+int ggt(int x, int y){
+
 }
 
 
-void main () {
-    int i = 0;
-    int y = i;
-    int res = ggt(i,2);
+void main() {
+    int x = 5;
+    int a = 3;
+    int y = ggt(4,3);
+    x = 1;
+    x = y;
 }
-
