@@ -127,8 +127,8 @@ string removeWhitespace(const string& word) {
     const unordered_set noWhiteSpaceSymbols = {'(', ')', '{', '}', ';', ',', '[', ']', '='};
     const unordered_set skipSymbols = {' ', '\n', '\r', '\t'};
 
-    const char whitespace = ' ';
-    result += word[0];
+    constexpr char whitespace = ' ';
+    result = word[0];
     bool space = skipSymbols.count(word[0]);
 
     for (int i = 1; i < word.size(); i++) {
@@ -166,11 +166,13 @@ string removeWhitespace(const string& word) {
         }
     }
 
+    replaceAll(result, string(2,whitespace),string(1,whitespace));
+
     if (result[0] == whitespace) {
         result = result.substr(1,result.length()-1);
     }
 
-    replaceAll(result, string(2,whitespace),string(1,whitespace));
+
 
     return result;
 }

@@ -26,19 +26,23 @@ const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
 
 class Function {
     public:
-        explicit Function(const shared_ptr<FunctionDefinitionNode>& functionNode);
+        explicit Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const vector<string> &functionList);
 
         void addLocalVariable(const VariableDeclarationNode &declaration_node);
         void addInputVariable(const pair<string,string>& parameter);
         string getOutput();
+        string getFunctionName();
 
 
     private:
         vector<Variable> variableList;
+        vector<string> functionList;
+        string functionName;
         string output;
         int localVariablePointerOffset;
         int paramaterPointerOffset;
         Variable findVariable(const string& name);
+
 
 };
 

@@ -7,18 +7,20 @@
 
 #include "ast.h"
 
-Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode) {
+Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const vector<string> &functionList) {
+    this->functionList = functionList;
+    this->functionName = functionNode->functionName;
     localVariablePointerOffset = 0;
     paramaterPointerOffset = 0;
-    output += functionNode->functionName + ":\n";
+    output += functionName + ":\n";
     output += "PUSHR\n";
     output += "MOVE W SP,R13\n";
 
-    for (pair<string,string> parameter : functionNode->parameters) {
+    for (const pair<string,string>& parameter : functionNode->parameters) {
         addInputVariable(parameter);
     }
 
-    for (shared_ptr<ASTNode> bodyElement: functionNode->body) {
+    for (const shared_ptr<ASTNode>& bodyElement: functionNode->body) {
         if (shared_ptr<VariableDeclarationNode> variable_declaration_node = dynamic_pointer_cast<VariableDeclarationNode>(bodyElement)) {
             addLocalVariable(*variable_declaration_node);
         }
@@ -27,8 +29,6 @@ Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode) {
     output += "MOVE W R13,SP\n";
     output += "POPR\n";
     output += "RET\n";
-
-    // Constructor implementation (initialize function-related things)
 }
 
 void Function::addInputVariable(const pair<string,string>& parameter) {
@@ -86,6 +86,10 @@ string Function::getOutput() {
     return output;
 }
 
+string Function::getFunctionName() {
+    return functionName;
+}
+
 int getSize(const string& type) {
     if (type == "int") {
         return 4;
@@ -129,12 +133,15 @@ string getMiType(const string& type) {
 }
 
 string compile(const vector<shared_ptr<ASTNode>>& ast) {
-    string output= "SEG\n";
-    output += "MOVE W I H'00FFFF',SP\n";
-    output += "JUMP main\n";
+    vector<string> functionNames;
 
-    // Implement your compile logic here
-    // ast[ast.size() - 1]->print();
+    string output;
+
+    string startOutput;
+    startOutput += "SEG\n";
+    startOutput += "MOVE W I H'00FFFF',SP\n";
+    startOutput += "JUMP main\n";
+
 
     vector<shared_ptr<FunctionDefinitionNode>> functionDefinitions;
     functionDefinitions.reserve(ast.size());
@@ -148,16 +155,23 @@ string compile(const vector<shared_ptr<ASTNode>>& ast) {
         }
     }
 
-    Function main = Function(functionDefinitions[functionDefinitions.size() - 1]);
+    if (functionDefinitions.empty()) {
+        cout << "Error: No function definitions found!" << endl;
+        exit(-1);
+    }
+
+    for (int i = 0; i < functionDefinitions.size()-1; i++) {
+        Function function = Function(functionDefinitions[i], functionNames);
+        output += function.getOutput();
+        functionNames.push_back(function.getFunctionName());
+    }
+
+    Function main = Function(functionDefinitions[functionDefinitions.size() - 1], functionNames);
     if (main.getOutput().substr(0,5) != "main:") {
         cout << "main() not detected";
     }
-    output += main.getOutput();
 
-    for (int i = 0; i < functionDefinitions.size()-1; i++) {
-        Function function = Function(functionDefinitions[i]);
-        output += function.getOutput();
-    }
+    output = startOutput + main.getOutput() + output;
 
     output += "END";
     return output;
