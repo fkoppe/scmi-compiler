@@ -7,10 +7,30 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
+
 using namespace std;
+
+const unordered_set<string> KEYWORD_SET = {
+    "void",
+    "int",
+    "short",
+    "char",
+    "float",
+    "double",
+};
+
+const unordered_set<string> CONTROL_SET = {
+    "return",
+    "if",
+    "else",
+    "while",
+    "for",
+};
 
 enum TokenType {
     KEYWORD,
+    CONTROL,
     IDENTIFIER,
     L_PAREN,
     R_PAREN,

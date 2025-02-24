@@ -8,6 +8,8 @@ add_executable(scmi source/main.cpp
     source/tokens.cpp
     source/ast.h
         source/compiler.hpp
-        source/compiler.cpp)
+        source/compiler.cpp
+        source/semantic_analyzer.hpp
+        source/semantic_analyzer.cpp)
 
 add_subdirectory(source)
