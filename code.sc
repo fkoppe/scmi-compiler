@@ -7,5 +7,6 @@ int ggt(int x, int y) {
 void main () {
     int i = 0;
     int y = i;
+    int res = ggt(i,2);
 }
 
