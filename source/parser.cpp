@@ -89,6 +89,13 @@ std::shared_ptr<ASTNode> Parser::parseFunctionCall() {
 
 // Parse a statement (expression followed by a semicolon)
 std::shared_ptr<ASTNode> Parser::parseStatement() {
+    //plain procedure call
+    if(peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_PAREN) {
+        auto functionCall = parseFunctionCall();
+        expect(TokenType::SEMICOLON, "Expected ';' after function call");
+        return functionCall;
+    }
+
     // Handle function definition: keyword identifier ( keyword identifier , keyword identifier ) { ... }
     if (peek().type == TokenType::KEYWORD && peek3().type == TokenType::L_PAREN) {
         std::string returnType = tokens[current].value;
@@ -124,6 +131,7 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
         return std::make_shared<FunctionDefinitionNode>(returnType, functionName, parameters, body);
     }
 
+
     // Handle variable declaration: keyword identifier = ... ;
     if (peek().type == TokenType::KEYWORD && peek3().type == TokenType::ASSIGN) {
         std::string varType = tokens[current].value;
@@ -148,11 +156,15 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
         return std::make_shared<VariableDeclarationNode>(varType, varName, value);
     }
 
-    // Handle assignment: identifier = number ;
+
+    // Handle assignment: identifier = ... ;
     if (peek().type == TokenType::IDENTIFIER) {
         std::string identifier = tokens[current].value;
         advance();
 
+        expect(TokenType::ASSIGN, "Expected '=' in assignment");
+
+        /*
         // Handle array declaration: identifier keyword [ number ] identifier = { number, number, ... };
         if (peek().type == TokenType::KEYWORD) {
             std::string arrayType = tokens[current].value;
@@ -179,7 +191,9 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
 
             return std::make_shared<ArrayDeclarationNode>(identifier, arrayType, arraySize, arrayName, arrayValues);
         }
+        */
 
+        /*
         // Handle assignment: identifier [ number ] = number ;
         if (match(TokenType::L_BRACK)) {
             auto index = parseExpression();
@@ -191,22 +205,24 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
             expect(TokenType::SEMICOLON, "Expected ';' at the end of array assignment");
             return std::make_shared<ArrayAssignmentNode>(std::make_shared<IdentifierNode>(identifier), index, value);
         }
+        */
+
+        //function call
+        if (peek2().type == TokenType::L_PAREN) {
+            std::string funcName = tokens[current - 1].value;
+            auto value = parseFunctionCall();
+            expect(TokenType::SEMICOLON, "Expected ';' after function call");
+            return std::make_shared<AssignmentNode>(std::make_shared<IdentifierNode>(identifier), value);
+        }
 
         // Handle normal assignment
-        if (match(TokenType::ASSIGN)) {
+        if (peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER || peek().type == TokenType::NUMBER_HEX) {
             auto expr = parseExpression();
             expect(TokenType::SEMICOLON, "Expected ';' at the end of assignment");
             return std::make_shared<AssignmentNode>(std::make_shared<IdentifierNode>(identifier), expr);
         }
 
-        // Handle function call: identifier ( identifier ) ;
-        if (match(TokenType::L_PAREN)) {
-            auto functionCall = parseFunctionCall();
-            expect(TokenType::SEMICOLON, "Expected ';' after function call");
-            return functionCall;
-        }
-
-        std::cerr << "Parse Error: Unexpected token in statement\n";
+        std::cerr << "Parse Error: Unexpected token in statement (" << tokenTypeName(peek().type) << ": " << peek().value << ")\n";
         exit(1);
     }
 
