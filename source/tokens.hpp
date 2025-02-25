@@ -18,12 +18,34 @@ const std::unordered_set<std::string> KEYWORD_SET = {
     "double",
 };
 
+enum class KeywordType {
+    VOID,
+    INT,
+    SHORT,
+    CHAR,
+    FLOAT,
+    DOUBLE,
+};
+
 const std::unordered_set<std::string> CONTROL_SET = {
     "return",
     "if",
     "else",
     "while",
     "for",
+};
+
+enum class ControlType {
+    RETURN,
+    IF,
+    ELSE,
+    WHILE,
+    FOR,
+};
+
+enum class NumberType {
+    DECIMAL,
+    HEX,
 };
 
 enum class TokenType {
@@ -38,15 +60,34 @@ enum class TokenType {
     R_BRACE,
     ASSIGN,
     NUMBER,
-    NUMBER_HEX,
     SEMICOLON,
     COMMA,
     END_OF_FILE,
 };
 
 struct Token {
+    Token() = default;
+    ~Token() = default;
+
     TokenType type;
-    std::string value;
+
+    uint64_t line;
+    uint64_t num;
+
+    union {
+        struct {
+            KeywordType type;
+        } keyword;
+        struct {
+            ControlType type;
+        } control;
+        struct {
+            std::string name;
+        } identifier;
+        struct {
+            NumberType number;
+        } number;
+    };
 
     const char* getName();
 };
