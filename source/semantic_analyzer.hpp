@@ -4,22 +4,23 @@
 #include "ast.h"
 #include <unordered_map>
 #include <string>
-#include <iostream>
+
+using namespace std;
 
 class SemanticAnalyzer {
-private:
-    std::unordered_map<std::string, std::string> symbolTable; // Stores (variable name -> type)
-    std::unordered_map<std::string, bool> isConstant; // Stores (variable name -> const status)
 
 public:
-    void analyze(std::vector<std::shared_ptr<ASTNode>>& ast);
+    void analyze(vector<shared_ptr<ASTNode>>& ast);
 
 private:
-    void analyzeNode(std::shared_ptr<ASTNode> node);
-    void analyzeAssignment(std::shared_ptr<AssignmentNode> node);
-    void analyzeVariableDeclaration(std::shared_ptr<VariableDeclarationNode> node);
-    void analyzeFunctionDefinition(std::shared_ptr<FunctionDefinitionNode> node);
-    void analyzeArrayAssignment(std::shared_ptr<ArrayAssignmentNode> node);
+    unordered_map<string, string> symbolTable; // Stores (variable name -> type)
+    unordered_map<string, bool> isConstant; // Stores (variable name -> const status)
+
+    void analyzeNode(shared_ptr<ASTNode> node);
+    void analyzeAssignment(shared_ptr<AssignmentNode> node);
+    void analyzeVariableDeclaration(shared_ptr<VariableDeclarationNode> node);
+    void analyzeFunctionDefinition(shared_ptr<FunctionDefinitionNode> node);
+    void analyzeArrayAssignment(shared_ptr<ArrayAssignmentNode> node);
 };
 
 #endif // SEMANTIC_ANALYZER_H
