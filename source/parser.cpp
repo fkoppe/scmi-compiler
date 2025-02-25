@@ -222,7 +222,7 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
             return std::make_shared<AssignmentNode>(std::make_shared<IdentifierNode>(identifier), expr);
         }
 
-        std::cerr << "Parse Error: Unexpected token in statement (" << tokenTypeName(peek().type) << ": " << peek().value << ")\n";
+        std::cerr << "Parse Error: Unexpected token in statement (" << peek().getName() << ": " << peek().value << ")\n";
         exit(1);
     }
 
@@ -249,7 +249,7 @@ std::shared_ptr<ASTNode> Parser::parseStatement() {
         }
     }
 
-    std::cerr << "Parse Error: Unexpected statement (" << tokenTypeName(peek().type) << ": " << peek().value << ")\n";
+    std::cerr << "Parse Error: Unexpected statement (" << peek().getName() << ": " << peek().value << ")\n";
     exit(1);
 }
 

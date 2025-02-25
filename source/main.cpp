@@ -10,11 +10,11 @@ int main() {
     auto tokens = lexString(readFile("../code.sc"));
     //auto tokens = lexString("void main(int y,int z){int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return; return ggt(); }");
 
-    Token eof = { END_OF_FILE, "" };
+    Token eof = { TokenType::END_OF_FILE, "" };
     tokens.push_back(eof);
 
     std::cout << "=== LEXER Output ===\n";
-    printTokens(tokens);
+    printToken(tokens);
 
     try {
         Parser parser = Parser(tokens);
