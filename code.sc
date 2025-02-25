@@ -1,12 +1,14 @@
+void main() {
+    int x = 5;
+    char a = 3;
+    x = ggt();
+    int y = ggt(4,3);
+}
+
+
+
 int ggt(int x, int y){
 
 }
 
 
-void main() {
-    int x = 5;
-    int a = 3;
-    int y = ggt(4,3);
-    x = 1;
-    x = y;
-}

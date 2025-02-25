@@ -15,7 +15,7 @@ using namespace std;
 
 string compile(const vector<shared_ptr<ASTNode>>& ast);
 
-struct VariableType {
+struct C_VariableType {
     string name;
     int size;
 };
@@ -23,12 +23,12 @@ struct VariableType {
 struct Variable {
     string name;
     string address;
-    VariableType type;
+    C_VariableType type;
 };
 
 struct FunctionDescr {
     string name;
-    VariableType type;
+    C_VariableType type;
 };
 
 

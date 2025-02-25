@@ -1,87 +1,149 @@
 #include "semantic_analyzer.hpp"
 
-void SemanticAnalyzer::analyze(std::vector<std::shared_ptr<ASTNode>>& ast) {
-    for (auto& node : ast) {
-        analyzeNode(node);
-    }
-}
+#include <unordered_set>
+#include <utility>
 
-// Analyze a single AST node
-void SemanticAnalyzer::analyzeNode(std::shared_ptr<ASTNode> node) {
-    if (auto assignment = std::dynamic_pointer_cast<AssignmentNode>(node)) {
-        analyzeAssignment(assignment);
-    } else if (auto varDecl = std::dynamic_pointer_cast<VariableDeclarationNode>(node)) {
-        analyzeVariableDeclaration(varDecl);
-    } else if (auto funcDef = std::dynamic_pointer_cast<FunctionDefinitionNode>(node)) {
-        analyzeFunctionDefinition(funcDef);
-    } else if (auto arrayAssign = std::dynamic_pointer_cast<ArrayAssignmentNode>(node)) {
-        analyzeArrayAssignment(arrayAssign);
-    }
-}
+// void SemanticAnalyzer::analyze(std::vector<std::shared_ptr<ASTNode>>& ast) {
+//     for (auto& node : ast) {
+//         analyzeNode(node);
+//     }
+// }
+pair<vector<S_FunctionDescr>,unordered_map<string,unordered_map<string,VariableType>>> analyze(vector<shared_ptr<ASTNode>>& nodes) {
+    vector<S_FunctionDescr> function_descrs;
+    unordered_map<string, unordered_map<string,VariableType>> mapVariableList;
 
-// Check assignments for constant modifications or undeclared variables
-void SemanticAnalyzer::analyzeAssignment(std::shared_ptr<AssignmentNode> node) {
-    std::string varName = node->variable->name;
+    vector<shared_ptr<FunctionDefinitionNode>> functions;
 
-    if (symbolTable.find(varName) == symbolTable.end()) {
-        std::cerr << "Semantic Error: Variable '" << varName << "' is used before declaration.\n";
-        exit(1);
-    }
+    for (const shared_ptr<ASTNode>& ast : nodes) {
+        if (const shared_ptr<FunctionDefinitionNode> func = dynamic_pointer_cast<FunctionDefinitionNode>(ast)) {
+            functions.push_back(func);
 
-    if (isConstant[varName]) {
-        std::cerr << "Semantic Error: Cannot assign a new value to constant variable '" << varName << "'.\n";
-        exit(1);
-    }
-}
-
-// Check for duplicate variable declarations
-void SemanticAnalyzer::analyzeVariableDeclaration(std::shared_ptr<VariableDeclarationNode> node) {
-    std::string varName = node->varName;
-    std::string varType = node->varType;
-
-    if (symbolTable.find(varName) != symbolTable.end()) {
-        std::cerr << "Semantic Error: Variable '" << varName << "' is already declared.\n";
-        exit(1);
-    }
-
-    symbolTable[varName] = varType;
-    isConstant[varName] = (varType == "const"); // Track if the variable is a constant
-}
-
-// Check function definitions for duplicate parameters or duplicate function names
-void SemanticAnalyzer::analyzeFunctionDefinition(std::shared_ptr<FunctionDefinitionNode> node) {
-    if (symbolTable.find(node->functionName) != symbolTable.end()) {
-        std::cerr << "Semantic Error: Function '" << node->functionName << "' is already declared.\n";
-        exit(1);
-    }
-
-    symbolTable[node->functionName] = "function"; // Register function name
-
-    std::unordered_map<std::string, bool> localScope;
-    for (auto& param : node->parameters) {
-        if (localScope.find(param.second) != localScope.end()) {
-            std::cerr << "Semantic Error: Duplicate parameter name '" << param.second << "' in function '" << node->functionName << "'.\n";
-            exit(1);
+            vector<pair<string,VariableType>> paramVariables;
+            for (const pair<string,string>& p: func->parameters) {
+                paramVariables.push_back({p.second, {p.first}});
+            }
+            //TODO: type
+            function_descrs.push_back({func->functionName, {func->returnType}, paramVariables});
         }
-        localScope[param.second] = true;
+        else {
+            cout << "Function declaration in AST Node not found" << endl;
+        }
     }
 
-    for (auto& stmt : node->body) {
-        analyzeNode(stmt); // Recursively analyze function body
+    //loop through function_descrs and check for same name and if main exist
+    checkFunctionNames(function_descrs);
+
+    for (shared_ptr<FunctionDefinitionNode> &node : functions) {
+        SemanticAnalyzer analyzer = SemanticAnalyzer(node, function_descrs);
+        mapVariableList.insert_or_assign(analyzer.getName(),analyzer.getVariableList());
+    }
+
+    //                      functionDescr         name      variableList
+    return {function_descrs, mapVariableList};
+}
+
+void checkFunctionNames(const vector<S_FunctionDescr>& function_descrs) {
+    unordered_set<string> names;
+
+    for (const S_FunctionDescr& x: function_descrs) {
+        if (names.count(x.name)) {
+            cout << "Function name: '" << x.name << "' already exists" << endl;
+            exit(-1);
+        }
+        names.insert(x.name);
+    }
+
+    if (!names.count("main")) {
+        cout << "Cannot find 'main' function" << endl;
+        exit(-1);
     }
 }
 
-// Check for out-of-bounds errors or assigning to undeclared arrays
-void SemanticAnalyzer::analyzeArrayAssignment(std::shared_ptr<ArrayAssignmentNode> node) {
-    std::string arrayName = node->arrayName->name;
+SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<S_FunctionDescr>& function_descrs) {
+    name = function_node->functionName;
+    this->function_descrs = function_descrs;
 
-    if (symbolTable.find(arrayName) == symbolTable.end()) {
-        std::cerr << "Semantic Error: Array '" << arrayName << "' is used before declaration.\n";
-        exit(1);
+    checkParams();
+
+    for (const shared_ptr<ASTNode>& node : function_node->body) {
+        if (const shared_ptr<VariableDeclarationNode> var = dynamic_pointer_cast<VariableDeclarationNode>(node)) {
+            checkDeclaration(var);
+        } else if (const shared_ptr<AssignmentNode> ass = dynamic_pointer_cast<AssignmentNode>(node)) {
+            checkAssignment(ass);
+        }
+    }
+    name = name;
+
+}
+
+unordered_map<string, VariableType> SemanticAnalyzer::getVariableList() {
+    return variableList;
+}
+
+string SemanticAnalyzer::getName() {
+    return name;
+}
+
+
+void SemanticAnalyzer::checkDeclaration(const shared_ptr<VariableDeclarationNode> &var) {
+    checkForbiddenIdentifier(var->varName);
+
+    VariableType type = {var->varType};
+    //TODO: type
+    if (!variableList.try_emplace(var->varName, type).second) {
+        cout << "Variable '" << var->varName << "' in function '" << name << "' is already declared" << endl;
+        exit(-1);
+    }
+}
+
+VariableType SemanticAnalyzer::findVariable(const string & name) {
+    auto it = variableList.find(name);
+    if (it != variableList.end()) {
+        return it->second;
+    }
+    throw runtime_error("Variable '" + name + "' not found");
+}
+
+void SemanticAnalyzer::checkIdentifierType(IdentifierNode a, IdentifierNode b) {
+    VariableType typeA = findVariable(a.name);
+    VariableType typeB = findVariable(b.name);
+    if (typeA.name != typeB.name) {
+        cout << "Invalid type assignment with '" << a.name << "' [" << typeA.name << "] and '" << b.name << "' [" << typeB.name << "] in function '" << this->name << "'" << endl;
+        exit(-1);
+    }
+}
+
+void SemanticAnalyzer::checkIdentifier(const shared_ptr<IdentifierNode>& identifier) {
+    if (!variableList.count(identifier->name)) {
+        cout << "Variable '" << identifier->name << "' in function '" << name << "' does not exist" << endl;
+        exit(-1);
+    }
+}
+
+void SemanticAnalyzer::checkAssignment(const shared_ptr<AssignmentNode>& ass) {
+    checkIdentifier(ass->variable);
+
+    if (shared_ptr<IdentifierNode> ident = dynamic_pointer_cast<IdentifierNode>(ass->expression)){
+        checkIdentifier(ident);
+        checkIdentifierType(*ass->variable, *ident);
     }
 
-    if (isConstant[arrayName]) {
-        std::cerr << "Semantic Error: Cannot modify constant array '" << arrayName << "'.\n";
-        exit(1);
+}
+
+
+void SemanticAnalyzer::checkParams() {
+    S_FunctionDescr ownDescr;
+
+    for (const S_FunctionDescr& x: function_descrs) {
+        if (x.name == name) {
+            ownDescr = x;
+        }
+    }
+
+    for (const auto&[name, type]: ownDescr.params) {
+        checkForbiddenIdentifier(name);
+        if (!variableList.try_emplace(name, type).second) {
+            cout << "Parameter '" << name << "' for function '"<< this->name << "' already exists" << endl;
+        }
     }
 }

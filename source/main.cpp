@@ -30,8 +30,8 @@ int main() {
 
         // Run semantic analysis
         std::cout << "\n=== Running Semantic Analysis ===\n";
-        SemanticAnalyzer analyzer;
-        analyzer.analyze(ast);
+
+        analyze(ast);
 
         std::cout << "Semantic analysis successful!\n";
 
