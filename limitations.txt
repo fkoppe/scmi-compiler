@@ -1,0 +1,12 @@
+- only double, float, int, short, char, (void) identifier types
+- only 2 parameters for arithmetic operation: x+y
+
+
+Functionality:
+- variable Declaration: int x = 1; int x = y; int x = ggt();
+- variable Assignment: x = y; x = 1; x = ggt();
+- function calls: ggt(); ggt(1,2); ggt(x,y); ggt(ggt(1,2)); int x = ggt(1,2)
+- function declaration: void ggt() {return;} , int ggt(int x, char y) { return 1; }
+
+NOT WORKING:
+- int ggt(){return ggt();} <parser>

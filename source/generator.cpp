@@ -8,7 +8,7 @@
 #include "ast.h"
 #include "analyzer.hpp"
 
-Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const unordered_map<string, VariableType>& variables, const vector<FunctionDescr>& function_descrs) {
+Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const unordered_map<string, Type>& variables, const vector<FunctionDescr>& function_descrs) {
     this->function_descrs = function_descrs;
     localVariablePointerOffset = 0;
     paramaterPointerOffset = 0;
@@ -154,18 +154,18 @@ string Function::getAssigment(const LocalVariable& assign_variable, const shared
     } else if (const shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(node_expression)) {
         FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
         output += getFunctionCall(function_call_node, function_call_type);
-        output += "MOVE " + getMiType(function_call_type.type.name) + " !SP+,R0\n";
+        output += "MOVE " + function_call_type.type.miType() + " !SP+,R0\n";
         declarationValue = "R0";
     }
     else {
         return "";
     }
 
-    result += "MOVE " + getMiType(assign_variable.type.name) + " " + declarationValue + "," + assign_variable.address + "\n";
+    result += "MOVE " + assign_variable.type.miType() + " " + declarationValue + "," + assign_variable.address + "\n";
     return result;
 }
 
-string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDescr>& function_descrs, const unordered_map<string, unordered_map<string, VariableType>>& variables) {
+string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDescr>& function_descrs, const unordered_map<string, unordered_map<string, Type>>& variables) {
     string output;
     output += "SEG\n";
     output += "MOVE W I H'00FFFF',SP\n";

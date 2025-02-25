@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 
+#include "Keyword.hpp"
+
 using namespace std;
 
 // AST Basisklasse
@@ -95,13 +97,13 @@ public:
 
 class FunctionDefinitionNode : public ASTNode {
 public:
-    string returnType;
+    Type returnType;
     string functionName;
-    vector<pair<string, string>> parameters;
+    vector<pair<Type, string>> parameters;
     vector<shared_ptr<ASTNode>> body;
 
-    FunctionDefinitionNode(string rType, string fName,
-                           vector<pair<string, string>> params,
+    FunctionDefinitionNode(Type rType, string fName,
+                           vector<pair<Type, string>> params,
                            vector<shared_ptr<ASTNode>> b)
         : returnType(move(rType)), functionName(move(fName)),
         parameters(move(params)), body(move(b)) {}
@@ -117,12 +119,12 @@ public:
 class ArrayDeclarationNode : public ASTNode {
 public:
     string identifier;
-    string elementType;
+    Type elementType;
     int size;
     string name;
     vector<shared_ptr<ASTNode>> values;
 
-    ArrayDeclarationNode(string id, string type, int s, string n, vector<shared_ptr<ASTNode>> vals)
+    ArrayDeclarationNode(string id, Type type, int s, string n, vector<shared_ptr<ASTNode>> vals)
         : identifier(move(id)), elementType(move(type)), size(s), name(move(n)), values(move(vals)) {}
 
     void print(int indent = 0) const override {
@@ -151,15 +153,15 @@ public:
 
 class VariableDeclarationNode : public ASTNode {
 public:
-    string varType;
+    Type varType;
     string varName;
     shared_ptr<ASTNode> value;
 
-    VariableDeclarationNode(string type, string name, shared_ptr<ASTNode> val)
+    VariableDeclarationNode(Type type, string name, shared_ptr<ASTNode> val)
         : varType(move(type)), varName(move(name)), value(move(val)) {}
 
     void print(int indent = 0) const override {
-        cout << string(indent, ' ') << "VariableDeclaration(" << varType << " " << varName << ")\n";
+        cout << string(indent, ' ') << "VariableDeclaration(" << varType.toString() << " " << varName << ")\n";
         value->print(indent + 2);
     }
 };

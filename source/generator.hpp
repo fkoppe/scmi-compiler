@@ -21,13 +21,13 @@ const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
 };
 
 struct LocalVariable {
-    VariableType type;
+    Type type;
     string address;
 };
 
 class Function {
     public:
-        Function(const shared_ptr<FunctionDefinitionNode>&, const unordered_map<string, VariableType>&, const vector<FunctionDescr>&);
+        Function(const shared_ptr<FunctionDefinitionNode>&, const unordered_map<string, Type>&, const vector<FunctionDescr>&);
 
         void addLocalVariable(const VariableDeclarationNode &declaration_node);
 

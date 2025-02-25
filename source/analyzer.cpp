@@ -8,9 +8,9 @@
 //         analyzeNode(node);
 //     }
 // }
-pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,VariableType>>> analyze(vector<shared_ptr<ASTNode>>& nodes) {
+pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> analyze(vector<shared_ptr<ASTNode>>& nodes) {
     vector<FunctionDescr> function_descrs;
-    unordered_map<string, unordered_map<string,VariableType>> mapVariableList;
+    unordered_map<string, unordered_map<string,Type>> mapVariableList;
 
     vector<shared_ptr<FunctionDefinitionNode>> functions;
 
@@ -18,8 +18,8 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,VariableTyp
         if (const shared_ptr<FunctionDefinitionNode> func = dynamic_pointer_cast<FunctionDefinitionNode>(ast)) {
             functions.push_back(func);
 
-            vector<pair<string,VariableType>> paramVariables;
-            for (const pair<string,string>& p: func->parameters) {
+            vector<pair<string,Type>> paramVariables;
+            for (const pair<Type,string>& p: func->parameters) {
                 paramVariables.push_back({p.second, {p.first}});
             }
             //TODO: type
@@ -71,11 +71,23 @@ SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& fun
             checkAssignment(make_shared<AssignmentNode>(make_shared<IdentifierNode>(var->varName), var->value));
         } else if (const shared_ptr<AssignmentNode> ass = dynamic_pointer_cast<AssignmentNode>(node)) {
             checkAssignment(ass);
+        } else if (const shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)) {
+            FunctionDescr function_descr = checkFunctionCall(function_call);
+            checkIdentifierType(function_call->functionName, function_descr.type, "", Type(TypeType::VOID));
+        } else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(node) ) {
+            Type definition = function_node->returnType;
+            Type input = getVariableType(return_value->value, definition);
+            checkIdentifierType(function_node->functionName, definition, "<returnValue>", input);
+        } else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(node)) {
+            if (function_node->returnType.getEnum() != TypeType::VOID) {
+                cout << "return value ["<< function_node->returnType.toString() <<"] need to be specified in '"<< function_node->functionName <<"'" << endl;
+                exit(-1);
+            }
         }
     }
 }
 
-unordered_map<string, VariableType> SemanticAnalyzer::getVariableList() {
+unordered_map<string, Type> SemanticAnalyzer::getVariableList() {
     return variableList;
 }
 
@@ -87,7 +99,7 @@ string SemanticAnalyzer::getName() {
 void SemanticAnalyzer::checkDeclaration(const shared_ptr<VariableDeclarationNode> &var) {
     checkForbiddenIdentifier(var->varName);
 
-    VariableType type = {var->varType};
+    Type type = {var->varType};
     //TODO: type
     if (!variableList.try_emplace(var->varName, type).second) {
         cout << "Variable '" << var->varName << "' in function '" << name << "' is already declared" << endl;
@@ -95,7 +107,7 @@ void SemanticAnalyzer::checkDeclaration(const shared_ptr<VariableDeclarationNode
     }
 }
 
-VariableType SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const VariableType& expected_type) {
+Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Type& expected_type) {
     if (shared_ptr<IdentifierNode> ident = dynamic_pointer_cast<IdentifierNode>(node)){
         checkIdentifier(ident);
         return findVariable(ident->name);
@@ -105,16 +117,16 @@ VariableType SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, 
         return call_func.type;
     }
     if (shared_ptr<NumberNode> number_node = dynamic_pointer_cast<NumberNode>(node)) {
-        if (expected_type.name == "int" && number_node->value < maxInt && number_node->value > minInt) {
-            return {"int"};
+        if (expected_type.getEnum() == TypeType::INT && number_node->value < maxInt && number_node->value > minInt) {
+            return Type(TypeType::INT);
         }
-        if (expected_type.name == "short" && number_node->value < maxShort && number_node->value > minShort) {
-            return {"short"};
+        if (expected_type.getEnum() == TypeType::SHORT && number_node->value < maxShort && number_node->value > minShort) {
+            return Type(TypeType::SHORT);
         }
-        if (expected_type.name == "char" && number_node->value < maxChar && number_node->value > minChar) {
-            return {"char"};
+        if (expected_type.getEnum() == TypeType::CHAR && number_node->value < maxChar && number_node->value > minChar) {
+            return Type(TypeType::CHAR);
         }
-        cout << "Invalid number: " << number_node->value << " for type '" << expected_type.name << "' in function '" << this->name << "'" << endl;
+        cout << "Invalid number: " << number_node->value << " for type '" << expected_type.toString() << "' in function '" << this->name << "'" << endl;
         exit(-1);
     }
     throw runtime_error("Unrecognized node type for getVariableType");
@@ -129,7 +141,7 @@ FunctionDescr SemanticAnalyzer::findFunctionDescr(const string& name) {
     throw runtime_error("Function '" + name + "' not found");
 }
 
-VariableType SemanticAnalyzer::findVariable(const string & name) {
+Type SemanticAnalyzer::findVariable(const string & name) {
     auto it = variableList.find(name);
     if (it != variableList.end()) {
         return it->second;
@@ -158,17 +170,17 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
     }
 
     for (int i = 0; i < function_call_node->arguments.size(); i++) {
-        VariableType definition = call_func.params.at(i).second;
-        VariableType input = getVariableType(function_call_node->arguments.at(i), definition);
+        Type definition = call_func.params.at(i).second;
+        Type input = getVariableType(function_call_node->arguments.at(i), definition);
         checkIdentifierType(function_call_node->functionName+"->"+call_func.params.at(i).first, definition, "<inputParameter>", input);
     }
 
     return call_func;
 }
 
-void SemanticAnalyzer::checkIdentifierType(string nameA, VariableType typeA, string nameB, VariableType typeB) {
-    if (typeA.name != typeB.name) {
-        cout << "Invalid type assignment with '" << nameA << "' [" << typeA.name << "] and '" << nameB << "' [" << typeB.name << "] in function '" << this->name << "'" << endl;
+void SemanticAnalyzer::checkIdentifierType(string nameA, Type typeA, string nameB, Type typeB) {
+    if (typeA.getEnum() != typeB.getEnum()) {
+        cout << "Invalid type assignment with '" << nameA << "' [" << typeA.toString() << "] and '" << nameB << "' [" << typeB.toString() << "] in function '" << this->name << "'" << endl;
         exit(-1);
     }
 }
@@ -183,8 +195,8 @@ void SemanticAnalyzer::checkIdentifier(const shared_ptr<IdentifierNode>& identif
 void SemanticAnalyzer::checkAssignment(const shared_ptr<AssignmentNode>& ass) {
     checkIdentifier(ass->variable);
 
-    VariableType definition = findVariable(ass->variable->name);
-    VariableType input = getVariableType(ass->expression, definition);
+    Type definition = findVariable(ass->variable->name);
+    Type input = getVariableType(ass->expression, definition);
     checkIdentifierType(ass->variable->name, definition, "<assignment>", input);
 }
 

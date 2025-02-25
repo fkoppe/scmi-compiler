@@ -11,8 +11,8 @@ int main() {
     //auto tokens = lexString(readFile("../code.sc"));
 
     Lexer lexer;
-    vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return;  }");
-
+    //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return;  }");
+    vector<Token> tokens = lexer.lexText(readFile("../code.sc"));
     cout << "\n=== LEXER Output ===\n";
     printToken(tokens);
     cout << "====================\n";

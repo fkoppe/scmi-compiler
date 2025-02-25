@@ -1,6 +1,7 @@
 #ifndef KEYWORD_HPP
 #define KEYWORD_HPP
 
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -19,6 +20,8 @@ enum class TypeType {
 class Type final {
     TypeType key;
 public:
+    Type() : key(TypeType::VOID) {}
+
     explicit Type(const TypeType key) : key(key) {}
 
     int size() const {
@@ -33,7 +36,7 @@ public:
         }
     }
 
-    string miType() {
+    string miType() const {
         switch (key) {
             case TypeType::INT:    return "W";
             case TypeType::SHORT:  return "H";
@@ -42,6 +45,22 @@ public:
             case TypeType::DOUBLE: return "D";
             default: return "";
         }
+    }
+
+    string toString() const {
+        switch (key) {
+            case TypeType::VOID:   return "void";
+            case TypeType::INT:    return "int";
+            case TypeType::SHORT:  return "short";
+            case TypeType::CHAR:   return "char";
+            case TypeType::FLOAT:  return "float";
+            case TypeType::DOUBLE: return "double";
+            default: return "unknown";
+        }
+    }
+
+    TypeType getEnum() const {
+        return key;
     }
 };
 
@@ -53,6 +72,7 @@ static Type convertStringToType(const string& name) {
     if (name == "char")  return Type(TypeType::CHAR);
     if (name == "float") return Type(TypeType::FLOAT);
     if (name == "double") return Type(TypeType::DOUBLE);
+    throw runtime_error("No such type: " + name);
 }
 
 #endif

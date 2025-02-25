@@ -25,17 +25,13 @@ using namespace std;
 //     "int","short","char","float","double","return","void"
 // };
 
-struct VariableType {
-    string name;
-};
-
 struct FunctionDescr {
     string name;
-    VariableType type; //type
-    vector<pair<string,VariableType>> params; //vector<type>
+    Type type; //type
+    vector<pair<string,Type>> params; //vector<type>
 };
 
-pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,VariableType>>> analyze(vector<shared_ptr<ASTNode>>& nodes);
+pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> analyze(vector<shared_ptr<ASTNode>>& nodes);
 void checkFunctionNames(const vector<FunctionDescr>& function_descrs);
 void checkForbiddenIdentifier(const string& name);
 
@@ -45,7 +41,7 @@ class SemanticAnalyzer {
 public:
     SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<FunctionDescr>& function_descrs);
 
-    unordered_map<string, VariableType> getVariableList();
+    unordered_map<string, Type> getVariableList();
     string getName();
 
 
@@ -58,16 +54,16 @@ private:
     const static int maxChar = std::numeric_limits<uint8_t>::max();
     const static int minChar = 0;
 
-    unordered_map<string, VariableType> variableList; // Stores (variable name -> type)
+    unordered_map<string, Type> variableList; // Stores (variable name -> type)
     unordered_map<string, bool> isConstant; // Stores (variable name -> const status)
     string name;
     vector<FunctionDescr> function_descrs;
 
-    VariableType getVariableType(const shared_ptr<ASTNode>&, const VariableType&);
+    Type getVariableType(const shared_ptr<ASTNode>&, const Type&);
     FunctionDescr findFunctionDescr(const string&);
-    VariableType findVariable(const string&);
+    Type findVariable(const string&);
     FunctionDescr checkFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node);
-    void checkIdentifierType(string, VariableType, string, VariableType);
+    void checkIdentifierType(string, Type, string, Type);
     void checkIdentifier(const shared_ptr<IdentifierNode>&);
     void checkAssignment(const shared_ptr<AssignmentNode>&);
     void checkDeclaration(const shared_ptr<VariableDeclarationNode>&);

@@ -48,7 +48,7 @@ shared_ptr<ASTNode> Parser::parseExpression() {
         return make_shared<NumberNode>(stoi(tokens[current - 1].raw));
     }
     else if (match(TokenType::IDENTIFIER)) {
-        shared_ptr<IdentifierNode> identifier = make_shared<IdentifierNode>(tokens[current - 1].getTypeName());
+        shared_ptr<IdentifierNode> identifier = make_shared<IdentifierNode>(tokens[current - 1].raw);
         if (match(TokenType::ASSIGN)) {
             auto expr = parseExpression();
             return make_shared<AssignmentNode>(identifier, expr);
@@ -101,7 +101,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
     //Handle function definition
     //keyword identifier ( keyword identifier , keyword identifier ) { ... }
     if (peek().type == TokenType::KEYWORD && peek().keyword == KeywordType::TYPE && peek2().type == TokenType::IDENTIFIER && peek3().type == TokenType::L_PAREN) {
-        string returnTypeName = tokens[current].getTypeName();
+        string returnTypeName = tokens[current].raw;
         advance();
 
         expect(TokenType::IDENTIFIER, "Expected function name after return type");
@@ -109,16 +109,15 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 
         expect(TokenType::L_PAREN, "Expected '(' after function name");
 
-        vector<pair<string, string>> parameters;
+        vector<pair<Type, string>> parameters;
         if (!match(TokenType::R_PAREN)) {
             do {
                 expect(TokenType::KEYWORD, "Expected parameter type");
-                string paramType = tokens[current - 1].getTypeName();
+                string paramType = tokens[current - 1].raw;
 
                 expect(TokenType::IDENTIFIER, "Expected parameter name");
                 string paramName = tokens[current - 1].raw;
-
-                parameters.emplace_back(paramType, paramName);
+                parameters.emplace_back(convertStringToType(paramType), paramName);
             } while (match(TokenType::COMMA));
 
             expect(TokenType::R_PAREN, "Expected ')' at the end of parameter list");
@@ -131,13 +130,13 @@ shared_ptr<ASTNode> Parser::parseStatement() {
             body.push_back(parseStatement()); // Parse function body statements
         }
 
-        return make_shared<FunctionDefinitionNode>(returnTypeName, functionName, parameters, body);
+        return make_shared<FunctionDefinitionNode>(convertStringToType(returnTypeName), functionName, parameters, body);
     }
 
     //Handle variable declaration
     //keyword identifier = ... ;
     if (peek().type == TokenType::KEYWORD && peek2().type == TokenType::IDENTIFIER && peek3().type == TokenType::ASSIGN) {
-        auto varType = tokens[current].type;
+        auto varType = tokens[current].raw;
         advance();
 
         expect(TokenType::IDENTIFIER, "Expected variable name after type");
@@ -155,7 +154,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         }
 
         expect(TokenType::SEMICOLON, "Expected ';' at the end of declaration");
-        return make_shared<VariableDeclarationNode>(toTypeType(varType), varName, value);
+        return make_shared<VariableDeclarationNode>(convertStringToType(varType), varName, value);
     }
 
 

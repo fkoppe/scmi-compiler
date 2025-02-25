@@ -1,3 +1,0 @@
-- no recursive function calls: ggt(ggt(ggt()))
-- only double, float, int, short, char identifier types
-- only 2 parameters for arithmetic operation: x+y

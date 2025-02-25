@@ -1,13 +1,10 @@
 void main() {
-    int x = 5;
-    char a = 200;
-    int y = ggt(a,3);
+    char x = 5;
+    int a=3;
+    int y = ggt(x);
 }
 
-
-
-int ggt(int x, int y){
-
+int ggt(char x){
+    int y = 1;
+    return y;
 }
-
-
