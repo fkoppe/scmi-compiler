@@ -8,55 +8,123 @@
 #include <string>
 #include <iostream>
 
+void Lexer::processWord() {
+    TokenType type = getToken(word);
+
+    Token token = Token(type);
+    token.line = line;
+    token.num = num;
+    token.raw = word;
+
+    if(type == TokenType::KEYWORD) {
+        if(TYPE_SET.count(word)) {
+            token.keyword = toKeywordType(word);
+        }
+    }
+
+    cout << word << " ";
+    result.push_back(token);
+    word.clear();
+}
+
+vector<Token> Lexer::lexText(const string& text) {
+    uint64_t line = 0;
+    uint64_t num = 0;
+
+    bool started_word = false;
+    bool skipping_line = false;
+
+    const unordered_set stopSymbols = {'(', ')', '{', '}', '[', ']', ';', ',', '=', '\n', '\t', ' '};
+    const unordered_set skipSymbols = {'\r'};
+
+    cout << "\nLexing input..." << endl;
+
+    for (size_t i = 0; i < text.size(); i++) {
+        const char character = text.at(i);
+
+        if(skipping_line) {
+            if('\n' == character) {
+                skipping_line = false;
+                continue;
+            }
+        }
+
+        if('/' == character) {
+            if(text.size() > i + 1) {
+                if(text.at(i + 1) == '/') {
+                    skipping_line = true;
+                    continue;
+                }
+            }
+        }
+
+        num++;
+
+        if(skipSymbols.count(character)) {
+            continue;
+        }
+
+        if(!started_word) {
+            if('\t' == character) {
+                num += 4;
+            } else if('\n' == character) {
+                line++;
+                num = 0;
+            } else if(' ' == character) {
+                num++;
+            } else {
+                started_word = true;
+                word.push_back(character);
+            }
+
+            continue;
+        }
+
+        if(!stopSymbols.count(character)) {
+            word.push_back(character);
+            continue;
+        }
+
+        started_word = false;
+        processWord();
+
+        if('\t' == character) {
+            num += 4;
+        } else if('\n' == character) {
+            line++;
+            num = 0;
+        } else if(' ' == character) {
+            num++;
+        } else {
+            word.push_back(character);
+            processWord();
+        }
+    }
+
+    if(word.size() > 0) {
+        processWord();
+    }
+
+    cout << "\nLexer reached EOF" << endl;
+
+    return result;
+}
+
 string readFile(const string& path) {
-    ifstream file(path, std::ios::ate);  // Open in "ate" mode to get file size
+    ifstream file(path, ios::ate);
     if (!file) {
-        throw std::runtime_error("Could not open file: " + path);
+        throw runtime_error("Could not open file: " + path);
     }
-    const streamsize size = file.tellg();  // Get file size
-    file.seekg(0);  // Move back to the beginning of the file
+    const streamsize size = file.tellg();
+    file.seekg(0);
     string content = string(size, '\0');
-    file.read(content.data(), size);  // Read file content into string
+    file.read(content.data(), size);
     return content;
-}
-
-vector<Token> lexString(const string& data) {
-    const string whiteSpaceData = removeWhitespace(data);
-    vector<string> splitData = split(whiteSpaceData, ' ');
-
-    vector<Token> result;
-    result.reserve(splitData.size());
-
-    for (const string& x : splitData) {
-        Token token = {getToken(x),x};
-        result.push_back(token);
-    }
-
-    return result;
-}
-
-vector<string> split(const string& str, char delimiter) {
-    vector<string> result;
-    string word;
-    for (int i = 0; i < str.length(); i++) {
-        if (str[i] == delimiter) {
-            result.push_back(word);
-            word = "";
-        }
-        else {
-            word += str[i];
-        }
-    }
-    return result;
 }
 
 TokenType getToken(const string& word) {
     if(KEYWORD_SET.count(word)) {
         return TokenType::KEYWORD;
-    }
-
-    if(CONTROL_SET.count(word)) {
-        return TokenType::CONTROL;
     }
 
     switch (word[0]) {
@@ -101,79 +169,16 @@ TokenType getToken(const string& word) {
         }
 
         if (digit) {
-            if (hex) {
-                return TokenType::NUMBER_HEX;
-            }
+            //if (hex) {
+            //    return TokenType::NUMBER_HEX;
+            //}
             return TokenType::NUMBER;
         }
 
-        cout << "found invalid number declaration: " << word << endl;
+        cout << "\nfound invalid number declaration: >" << word << "<" << endl;
         exit(-1);
     }
-    cout << "encountered unrecognized symbol: " << word << endl;
+    cout << "\nencountered unrecognized symbol: >" << word << "<" << endl;
 
     exit(-1);
-}
-
-string removeWhitespace(const string& word) {
-    string result;
-    const unordered_set noWhiteSpaceSymbols = {'(', ')', '{', '}', ';', ',', '[', ']', '='};
-    const unordered_set skipSymbols = {' ', '\n', '\r', '\t'};
-
-    constexpr char whitespace = ' ';
-    result = word[0];
-    bool space = skipSymbols.count(word[0]);
-
-    for (int i = 1; i < word.size(); i++) {
-        char cur = word[i];
-
-        if (space) {
-            if (!skipSymbols.count(cur)) {
-                space = false;
-
-                if (noWhiteSpaceSymbols.count(cur)) {
-                    result += whitespace;
-                    result += cur;
-                    result += whitespace;
-                }
-                else {
-                    result += whitespace;
-                    result += cur;
-                }
-            }
-        }
-        else {
-            if (skipSymbols.count(cur)) {
-                space = true;
-            }
-            else {
-                if (noWhiteSpaceSymbols.count(cur)) {
-                    result += whitespace;
-                    result += cur;
-                    result += whitespace;
-                }
-                else {
-                    result += cur;
-                }
-            }
-        }
-    }
-
-    replaceAll(result, string(2,whitespace),string(1,whitespace));
-
-    if (result[0] == whitespace) {
-        result = result.substr(1,result.length()-1);
-    }
-
-
-
-    return result;
-}
-
-void replaceAll(string& result, const string& from, const string& to) {
-    size_t pos = 0;
-    while ((pos = result.find(from, pos)) != string::npos) {
-        result.replace(pos, from.length(), to);
-        pos += to.length();  // Verhindert Endlosschleife
-    }
 }

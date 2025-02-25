@@ -8,8 +8,12 @@
 #include <string>
 #include <vector>
 #include <unordered_set>
+#include <cstdint>
+#include <variant>
 
-const std::unordered_set<std::string> KEYWORD_SET = {
+using namespace std;
+
+const unordered_set<string> TYPE_SET = {
     "void",
     "int",
     "short",
@@ -18,7 +22,7 @@ const std::unordered_set<std::string> KEYWORD_SET = {
     "double",
 };
 
-enum class KeywordType {
+enum class TypeType {
     VOID,
     INT,
     SHORT,
@@ -27,7 +31,13 @@ enum class KeywordType {
     DOUBLE,
 };
 
-const std::unordered_set<std::string> CONTROL_SET = {
+const unordered_set<string> KEYWORD_SET = {
+    "void",
+    "int",
+    "short",
+    "char",
+    "float",
+    "double",
     "return",
     "if",
     "else",
@@ -35,7 +45,8 @@ const std::unordered_set<std::string> CONTROL_SET = {
     "for",
 };
 
-enum class ControlType {
+enum class KeywordType {
+    TYPE,
     RETURN,
     IF,
     ELSE,
@@ -50,7 +61,6 @@ enum class NumberType {
 
 enum class TokenType {
     KEYWORD,
-    CONTROL,
     IDENTIFIER,
     L_PAREN,
     R_PAREN,
@@ -65,33 +75,30 @@ enum class TokenType {
     END_OF_FILE,
 };
 
-struct Token {
-    Token() = default;
-    ~Token() = default;
+TypeType toTypeType(string name);
+KeywordType toKeywordType(string name);
+
+class Token {
+public:
+    Token(TokenType type);
 
     TokenType type;
 
-    uint64_t line;
-    uint64_t num;
+    uint64_t line = 0;
+    uint64_t num = 0;
 
-    union {
-        struct {
-            KeywordType type;
-        } keyword;
-        struct {
-            ControlType type;
-        } control;
-        struct {
-            std::string name;
-        } identifier;
-        struct {
-            NumberType number;
-        } number;
-    };
+    string raw;
 
-    const char* getName();
+    KeywordType keyword;
+    NumberType number;
+
+    const char* getTypeName();
+
+    string where();
 };
 
-void printToken(std::vector<Token> tokens);
+static const Token eof = Token(TokenType::END_OF_FILE);
+
+void printToken(vector<Token> tokens);
 
 #endif //TOKENS_HPP
