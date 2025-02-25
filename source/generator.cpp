@@ -1,12 +1,12 @@
 //
 // Created by cedric on 21.02.25.
 //
-#include "compiler.hpp"
+#include "generator.hpp"
 
 #include <bits/locale_facets_nonio.h>
 
 #include "ast.h"
-#include "semantic_analyzer.hpp"
+#include "analyzer.hpp"
 
 Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const unordered_map<string, VariableType>& variables, const vector<FunctionDescr>& function_descrs) {
     this->function_descrs = function_descrs;

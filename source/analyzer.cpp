@@ -1,4 +1,4 @@
-#include "semantic_analyzer.hpp"
+#include "analyzer.hpp"
 
 #include <unordered_set>
 #include <utility>
@@ -137,10 +137,10 @@ VariableType SemanticAnalyzer::findVariable(const string & name) {
     throw runtime_error("Variable '" + name + "' not found");
 }
 
-FunctionDescr SemanticAnalyzer::checkFunctionCall(shared_ptr<FunctionCallNode>& function_call_node) {
+FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node) {
     FunctionDescr call_func;
     bool found = false;
-    for (FunctionDescr x: function_descrs) {
+    for (const FunctionDescr& x: function_descrs) {
         if (function_call_node->functionName == x.name) {
             found = true;
             call_func = x;

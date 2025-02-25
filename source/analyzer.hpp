@@ -51,11 +51,11 @@ public:
 
 
 private:
-    const static int maxInt = std::numeric_limits<int>::max();
-    const static int minInt = std::numeric_limits<int>::min();
-    const static int maxShort = std::numeric_limits<short>::max();
+    const static int maxInt = std::numeric_limits<int32_t>::max();
+    const static int minInt = std::numeric_limits<int32_t>::min();
+    const static int maxShort = std::numeric_limits<uint16_t>::max();
     const static int minShort = 0;
-    const static int maxChar = std::numeric_limits<char>::max();
+    const static int maxChar = std::numeric_limits<uint8_t>::max();
     const static int minChar = 0;
 
     unordered_map<string, VariableType> variableList; // Stores (variable name -> type)
@@ -66,7 +66,7 @@ private:
     VariableType getVariableType(const shared_ptr<ASTNode>&, const VariableType&);
     FunctionDescr findFunctionDescr(const string&);
     VariableType findVariable(const string&);
-    FunctionDescr checkFunctionCall(shared_ptr<FunctionCallNode>& function_call_node);
+    FunctionDescr checkFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node);
     void checkIdentifierType(string, VariableType, string, VariableType);
     void checkIdentifier(const shared_ptr<IdentifierNode>&);
     void checkAssignment(const shared_ptr<AssignmentNode>&);

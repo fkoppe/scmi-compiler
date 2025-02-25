@@ -5,7 +5,7 @@
 
 using namespace std;
 
-enum class Keyword {
+enum class TypeType {
     VOID,
     INT,
     SHORT,
@@ -15,29 +15,29 @@ enum class Keyword {
 };
 
 class Type final {
-    Keyword key;
+    TypeType key;
 public:
-    explicit Type(const Keyword key) : key(key) {}
+    explicit Type(const TypeType key) : key(key) {}
 
     int size() const {
         switch (key) {
-            case Keyword::VOID:   return 0;
-            case Keyword::INT:    return 4;
-            case Keyword::SHORT:  return 2;
-            case Keyword::CHAR:   return 1;
-            case Keyword::FLOAT:  return 4;
-            case Keyword::DOUBLE: return 8;
-            default: throw runtime_error("Keyword type error in size()");
+            case TypeType::VOID:   return 0;
+            case TypeType::INT:    return 4;
+            case TypeType::SHORT:  return 2;
+            case TypeType::CHAR:   return 1;
+            case TypeType::FLOAT:  return 4;
+            case TypeType::DOUBLE: return 8;
+            default: throw runtime_error("TypeType type error in size()");
         }
     }
 
     string miType() {
         switch (key) {
-            case Keyword::INT:    return "W";
-            case Keyword::SHORT:  return "H";
-            case Keyword::CHAR:   return "B";
-            case Keyword::FLOAT:  return "F";
-            case Keyword::DOUBLE: return "D";
+            case TypeType::INT:    return "W";
+            case TypeType::SHORT:  return "H";
+            case TypeType::CHAR:   return "B";
+            case TypeType::FLOAT:  return "F";
+            case TypeType::DOUBLE: return "D";
             default: throw runtime_error("no miType error");
         }
     }
@@ -45,12 +45,12 @@ public:
 
 
 static Type convertStringToType(const string& name) {
-    if (name == "void")  return Type(Keyword::VOID);
-    if (name == "int")   return Type(Keyword::INT);
-    if (name == "short") return Type(Keyword::SHORT);
-    if (name == "char")  return Type(Keyword::CHAR);
-    if (name == "float") return Type(Keyword::FLOAT);
-    if (name == "double") return Type(Keyword::DOUBLE);
+    if (name == "void")  return Type(TypeType::VOID);
+    if (name == "int")   return Type(TypeType::INT);
+    if (name == "short") return Type(TypeType::SHORT);
+    if (name == "char")  return Type(TypeType::CHAR);
+    if (name == "float") return Type(TypeType::FLOAT);
+    if (name == "double") return Type(TypeType::DOUBLE);
     throw runtime_error(name + " is not a valid type name");
 }
 

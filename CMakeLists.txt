@@ -5,12 +5,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(scmi source/main.cpp
-    source/tokens.cpp
+        source/token.cpp
     source/ast.h
-        source/compiler.hpp
-        source/compiler.cpp
-        source/semantic_analyzer.hpp
-        source/semantic_analyzer.cpp
+        source/generator.hpp
+        source/generator.cpp
+        source/analyzer.hpp
+        source/analyzer.cpp
         source/Keyword.hpp)
 
 add_subdirectory(source)

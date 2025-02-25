@@ -5,5 +5,5 @@ target_sources(
     lexer.cpp
     parser.hpp
     parser.cpp
-    tokens.hpp
+        token.hpp
 )

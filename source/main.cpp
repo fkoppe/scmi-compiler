@@ -1,15 +1,13 @@
 #include <iostream>
 
-#include "compiler.hpp"
+#include "generator.hpp"
 #include "Keyword.hpp"
-#include "tokens.hpp"
+#include "token.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
-#include "semantic_analyzer.hpp"
+#include "analyzer.hpp"
 
 int main() {
-    cout << Void().print() << endl;
-
 
 
     auto tokens = lexString(readFile("../code.sc"));

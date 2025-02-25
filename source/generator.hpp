@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "ast.h"
-#include "semantic_analyzer.hpp"
+#include "analyzer.hpp"
 
 using namespace std;
 
