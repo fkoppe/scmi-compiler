@@ -69,7 +69,7 @@ shared_ptr<ASTNode> Parser::parseExpression() {
 // Parse a function call
 shared_ptr<ASTNode> Parser::parseFunctionCall() {
     expect(TokenType::IDENTIFIER, "Expected function name");
-    string functionName = tokens[current - 1].getTypeName();
+    string functionName = tokens[current - 1].raw;
     expect(TokenType::L_PAREN, "Expected '(' after function name");
 
     auto functionCall = make_shared<FunctionCallNode>(functionName);
@@ -105,7 +105,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         advance();
 
         expect(TokenType::IDENTIFIER, "Expected function name after return type");
-        string functionName = tokens[current - 1].getTypeName();
+        string functionName = tokens[current - 1].raw;
 
         expect(TokenType::L_PAREN, "Expected '(' after function name");
 
@@ -116,7 +116,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
                 string paramType = tokens[current - 1].getTypeName();
 
                 expect(TokenType::IDENTIFIER, "Expected parameter name");
-                string paramName = tokens[current - 1].getTypeName();
+                string paramName = tokens[current - 1].raw;
 
                 parameters.emplace_back(paramType, paramName);
             } while (match(TokenType::COMMA));
@@ -141,7 +141,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         advance();
 
         expect(TokenType::IDENTIFIER, "Expected variable name after type");
-        string varName = tokens[current - 1].getTypeName();
+        string varName = tokens[current - 1].raw;
 
         expect(TokenType::ASSIGN, "Expected '=' in variable declaration");
 
@@ -161,7 +161,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 
     // Handle assignment: identifier = ... ;
     if (peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::ASSIGN) {
-        string identifier = tokens[current].getTypeName();
+        string identifier = tokens[current].raw;
         advance();
 
         expect(TokenType::ASSIGN, "Expected '=' in assignment");
@@ -212,7 +212,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 
         //function call
         if (peek2().type == TokenType::L_PAREN) {
-            string funcName = tokens[current - 1].getTypeName();
+            string funcName = tokens[current - 1].raw;
             auto value = parseFunctionCall();
             expect(TokenType::SEMICOLON, "Expected ';' after function call");
             return make_shared<AssignmentNode>(make_shared<IdentifierNode>(identifier), value);
@@ -232,7 +232,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
     //return, goto, continue, break
     if (peek().type == TokenType::KEYWORD) {
         advance();
-        string name = tokens[current - 1].getTypeName();
+        string name = tokens[current - 1].raw;
 
         if(peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER) {
             if(peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_PAREN) {
@@ -242,7 +242,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
             }
 
             auto expr = parseExpression();
-            string expression = tokens[current - 1].getTypeName();
+            string expression = tokens[current - 1].raw;
             expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
 
             return make_shared<ReturnValueNode>(expr);
