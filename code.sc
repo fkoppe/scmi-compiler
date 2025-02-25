@@ -1,8 +1,8 @@
 void main() {
     int x = 5;
-    char a = 3;
-    x = ggt();
-    int y = ggt(4,3);
+    char a = 500;
+    int y = ggt(a,3);
+    y = a;
 }
 
 

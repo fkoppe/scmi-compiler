@@ -4,6 +4,7 @@
 #include "ast.h"
 #include <unordered_map>
 #include <string>
+#include <limits>
 #include <unordered_set>
 
 using namespace std;
@@ -14,10 +15,10 @@ using namespace std;
 - check forbidden identifier names ✅
 - check for not declared variables ✅
 - created variable list <name,type> ✅
-- check for not declared function calls -> functionList
-- check for same type when assigning (variable & function call)
-- check for same type -> function params
-- check for type max number when immediate value. Ex: char x = 256
+- check for not declared function calls -> functionList ✅
+- check for same type when assigning (variable & function call) ✅
+- check for same type -> function params ✅
+- check for type max number when immediate value. Ex: char x = 256 ✅
 */
 
 // const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
@@ -28,26 +29,21 @@ struct VariableType {
     string name;
 };
 
-struct S_Variable {
-    string name;
-    VariableType type;
-};
-
-struct S_FunctionDescr {
+struct FunctionDescr {
     string name;
     VariableType type; //type
     vector<pair<string,VariableType>> params; //vector<type>
 };
 
-pair<vector<S_FunctionDescr>,unordered_map<string,unordered_map<string,VariableType>>> analyze(vector<shared_ptr<ASTNode>>& nodes);
-void checkFunctionNames(const vector<S_FunctionDescr>& function_descrs);
+pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,VariableType>>> analyze(vector<shared_ptr<ASTNode>>& nodes);
+void checkFunctionNames(const vector<FunctionDescr>& function_descrs);
 void checkForbiddenIdentifier(const string& name);
 
 
 class SemanticAnalyzer {
 
 public:
-    SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<S_FunctionDescr>& function_descrs);
+    SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<FunctionDescr>& function_descrs);
 
     unordered_map<string, VariableType> getVariableList();
     string getName();
@@ -55,13 +51,23 @@ public:
 
 
 private:
+    const static int maxInt = std::numeric_limits<int>::max();
+    const static int minInt = std::numeric_limits<int>::min();
+    const static int maxShort = std::numeric_limits<short>::max();
+    const static int minShort = 0;
+    const static int maxChar = std::numeric_limits<char>::max();
+    const static int minChar = 0;
+
     unordered_map<string, VariableType> variableList; // Stores (variable name -> type)
     unordered_map<string, bool> isConstant; // Stores (variable name -> const status)
     string name;
-    vector<S_FunctionDescr> function_descrs;
+    vector<FunctionDescr> function_descrs;
 
+    VariableType getVariableType(const shared_ptr<ASTNode>&, const VariableType&);
+    FunctionDescr findFunctionDescr(const string&);
     VariableType findVariable(const string&);
-    void checkIdentifierType(IdentifierNode, IdentifierNode);
+    FunctionDescr checkFunctionCall(shared_ptr<FunctionCallNode>& function_call_node);
+    void checkIdentifierType(string, VariableType, string, VariableType);
     void checkIdentifier(const shared_ptr<IdentifierNode>&);
     void checkAssignment(const shared_ptr<AssignmentNode>&);
     void checkDeclaration(const shared_ptr<VariableDeclarationNode>&);

@@ -10,60 +10,44 @@
 #include <vector>
 
 #include "ast.h"
+#include "semantic_analyzer.hpp"
 
 using namespace std;
 
 string compile(const vector<shared_ptr<ASTNode>>& ast);
 
-struct C_VariableType {
-    string name;
-    int size;
-};
-
-struct Variable {
-    string name;
-    string address;
-    C_VariableType type;
-};
-
-struct FunctionDescr {
-    string name;
-    C_VariableType type;
-};
-
-
 const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
     "int","short","char","float","double","return","void"
 };
 
+struct LocalVariable {
+    VariableType type;
+    string address;
+};
+
 class Function {
     public:
-        explicit Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const vector<FunctionDescr> &functionList);
+        Function(const shared_ptr<FunctionDefinitionNode>&, const unordered_map<string, VariableType>&, const vector<FunctionDescr>&);
 
         void addLocalVariable(const VariableDeclarationNode &declaration_node);
-        void addInputVariable(const pair<string,string>& parameter);
 
         string getOutput();
-        FunctionDescr getDescr();
-
 
     private:
-        vector<Variable> variableList;
-        vector<FunctionDescr> functionList;
-        FunctionDescr functionDescr;
+        unordered_map<string, LocalVariable> localVariableMap;
+        vector<FunctionDescr> function_descrs;
         string output;
         int localVariablePointerOffset;
         int paramaterPointerOffset;
-        Variable findVariable(const string& name);
+        LocalVariable findVariable(const string& name);
         FunctionDescr findFunctionDescr(const string& name);
         string getFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node, const FunctionDescr& function_call_type);
-        string getAssigment(const Variable& assign_variable, const shared_ptr<ASTNode>& node_expression);
+        string getAssigment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
 
 
 
 };
 
-void checkForbiddenIdentifier(const string& name);
 int getSize(const string& type);
 string getMiType(const string& type);
 

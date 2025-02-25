@@ -10,6 +10,7 @@ add_executable(scmi source/main.cpp
         source/compiler.hpp
         source/compiler.cpp
         source/semantic_analyzer.hpp
-        source/semantic_analyzer.cpp)
+        source/semantic_analyzer.cpp
+        source/Keyword.hpp)
 
 add_subdirectory(source)
