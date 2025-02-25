@@ -14,11 +14,7 @@
 
 using namespace std;
 
-string compile(const vector<shared_ptr<ASTNode>>& ast);
-
-const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
-    "int","short","char","float","double","return","void"
-};
+string compile(const vector<shared_ptr<ASTNode>>&, const vector<FunctionDescr>&, const unordered_map<string, unordered_map<string, Type>>&);
 
 struct LocalVariable {
     Type type;
@@ -28,28 +24,27 @@ struct LocalVariable {
 class Function {
     public:
         Function(const shared_ptr<FunctionDefinitionNode>&, const unordered_map<string, Type>&, const vector<FunctionDescr>&);
-
-        void addLocalVariable(const VariableDeclarationNode &declaration_node);
-
         string getOutput();
 
     private:
         unordered_map<string, LocalVariable> localVariableMap;
-        vector<FunctionDescr> function_descrs;
+        vector<FunctionDescr> function_descr_vector;
+        FunctionDescr function_descr_own;
         string output;
+        string functionName;
+        string returnLabel;
         int localVariablePointerOffset;
         int paramaterPointerOffset;
-        LocalVariable findVariable(const string& name);
-        FunctionDescr findFunctionDescr(const string& name);
-        string getFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node, const FunctionDescr& function_call_type);
-        string getAssigment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
+        FunctionDescr findFunctionDescr(const string&);
+        void generateFunctionCall(const shared_ptr<FunctionCallNode>&, const FunctionDescr&);
+        void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
+        int addVariables(const unordered_map<string, Type>&);
+
+        void generateOutput(const shared_ptr<FunctionCallNode>&);
+
 
 
 
 };
-
-int getSize(const string& type);
-string getMiType(const string& type);
-
 
 #endif //COMPILER_HPP

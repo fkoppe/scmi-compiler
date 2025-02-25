@@ -22,7 +22,6 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
             for (const pair<Type,string>& p: func->parameters) {
                 paramVariables.push_back({p.second, {p.first}});
             }
-            //TODO: type
             function_descrs.push_back({func->functionName, {func->returnType}, paramVariables});
         }
         else {
@@ -100,7 +99,6 @@ void SemanticAnalyzer::checkDeclaration(const shared_ptr<VariableDeclarationNode
     checkForbiddenIdentifier(var->varName);
 
     Type type = {var->varType};
-    //TODO: type
     if (!variableList.try_emplace(var->varName, type).second) {
         cout << "Variable '" << var->varName << "' in function '" << name << "' is already declared" << endl;
         exit(-1);
@@ -159,6 +157,24 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
             break;
         }
     }
+
+    if (function_call_node->functionName == "output@" && function_call_node->arguments.size() <= 13) {
+        found = true;
+        vector<pair<string,Type>> params;
+
+        for (const auto& x: function_call_node->arguments) {
+            if (shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(x)) {
+                params.emplace_back("",variableList.at(identifier_node->name));
+            }
+            else {
+                found = false;
+            }
+        }
+
+        call_func = {function_call_node->functionName, Type(TypeType::VOID), params};
+    }
+
+
     if (!found) {
         cout << "Function call '" << function_call_node->functionName << "' in '" << this->name << "' not found" << endl;
         exit(-1);
@@ -166,7 +182,7 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
 
     //check params
     if (function_call_node->arguments.size() != call_func.params.size()) {
-        cout << "Function call '" << function_call_node->functionName << "' in '" << this->name << "does not have the correct number of arguments" << endl;
+        cout << "Function call '" << function_call_node->functionName << "' in '" << this->name << "' does not have the correct number of arguments" << endl;
     }
 
     for (int i = 0; i < function_call_node->arguments.size(); i++) {
@@ -214,6 +230,20 @@ void SemanticAnalyzer::checkParams() {
         checkForbiddenIdentifier(name);
         if (!variableList.try_emplace(name, type).second) {
             cout << "Parameter '" << name << "' for function '"<< this->name << "' already exists" << endl;
+        }
+    }
+}
+
+void checkForbiddenIdentifier(const string& name) {
+    if (FORBIDDEN_IDENTIFIER_NAMES.count(name)) {
+        cout << "forbidden identifier name:" << name << endl;
+        exit(-1);
+    }
+
+    for (const auto& x : FORBIDDEN_SUBSTRING) {
+        if (name.find(x) != std::string::npos) {
+            std::cout << "forbidden substring found in identifier: " << name << std::endl;
+            exit(-1);
         }
     }
 }

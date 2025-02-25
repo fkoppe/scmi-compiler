@@ -38,7 +38,7 @@ int main() {
 
 
         cout << "\n\n=== COMPILE Output ===\n";
-        //cout << compile(ast) << endl;
+        cout << compile(ast, analysis.first, analysis.second) << endl;
         cout << "\n\n======================\n";
 
     } catch (const exception& e) {

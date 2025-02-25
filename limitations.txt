@@ -10,3 +10,4 @@ Functionality:
 
 NOT WORKING:
 - int ggt(){return ggt();} <parser>
+- different number: negative, hex

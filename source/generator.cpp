@@ -9,41 +9,63 @@
 #include "analyzer.hpp"
 
 Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const unordered_map<string, Type>& variables, const vector<FunctionDescr>& function_descrs) {
-    this->function_descrs = function_descrs;
+    this->functionName = functionNode->functionName;
+    this->function_descr_vector = function_descrs;
+    this->function_descr_own = findFunctionDescr(functionName);
+    this->returnLabel = functionName+"__return__";
     localVariablePointerOffset = 0;
     paramaterPointerOffset = 0;
+
+    output += functionName + ":\n";
+
+    if (functionName != "main") {
+        output += "PUSHR\n";
+    }
+
+    output += "MOVE W SP,R13\n";
 
     //reset SP to sum of localVariableSize
     //assign addresses to localVariableMap (local + parameter)
     //...
+    int declaredVariableSize = addVariables(variables);
+    output += "SUB W I " + to_string(declaredVariableSize) + ",SP\n";
 
-
-    output += functionNode->functionName + ":\n";
-    output += "PUSHR\n";
-    output += "MOVE W SP,R13\n";
 
 
     for (const shared_ptr<ASTNode>& bodyElement: functionNode->body) {
         if (shared_ptr<VariableDeclarationNode> variable_declaration_node = dynamic_pointer_cast<VariableDeclarationNode>(bodyElement)) {
-            //addLocalVariable(*variable_declaration_node);
-        }
-        if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
+            generateAssignment(localVariableMap.at(variable_declaration_node->varName), variable_declaration_node->value);
+        } else if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
+            generateAssignment(localVariableMap.at(assignment_node->variable->name), assignment_node);
+        } else if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
+            if (function_call_node->functionName == "output@") {
+                generateOutput(function_call_node);
+                continue;
+            }
+
             FunctionDescr function_descr = findFunctionDescr(function_call_node->functionName);
-            output += getFunctionCall(function_call_node, function_descr);
-            //output += "ADD W I " + to_string(function_descr.type.size) + ",SP\n";
-        }
-        if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
-            //output += getAssigment(findVariable(assignment_node->variable->name), assignment_node->expression);
+            generateFunctionCall(function_call_node, function_descr);
+
+            //no need because function call as body-element is always void -> analyzer
+            //output += "ADD W I " + to_string(function_descr.type.size()) + ",SP\n";
+        } else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(bodyElement) ) {
+            generateAssignment(localVariableMap.at("return"),return_value->value);
+            output += "JUMP " + returnLabel+"\n";
+        } else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(bodyElement)) {
+            output += "JUMP " + returnLabel+"\n";
         }
     }
 
+    output += returnLabel+":\n";
     output += "MOVE W R13,SP\n";
-    output += "POPR\n";
-    output += "RET\n";
+    if (functionName != "main") {
+        output += "POPR\n";
+    }
+    output += "RET\n\n";
 }
 
 FunctionDescr Function::findFunctionDescr(const string& name) {
-    for (auto & i : function_descrs) {
+    for (auto & i : function_descr_vector) {
         if (i.name == name) {
             return i;
         }
@@ -52,117 +74,90 @@ FunctionDescr Function::findFunctionDescr(const string& name) {
     exit(-1);
 }
 
-void checkForbiddenIdentifier(const string& name) {
-    if (FORBIDDEN_IDENTIFIER_NAMES.count(name)) {
-        cout << "forbidden identifier name:" << name << endl;
-        exit(-1);
-    }
-}
+
 
 string Function::getOutput() {
     return output;
 }
 
 
-string Function::getFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node, const FunctionDescr& function_call_type) {
-    string result;
-    //const int outputSize = function_call_type.type.size;
-
-    vector<LocalVariable> inputs;
-
-    for (const shared_ptr<ASTNode>& arguments_node: function_call_node->arguments) {
-        if (shared_ptr<NumberNode> arguments_number = dynamic_pointer_cast<NumberNode>(arguments_node)) {
-            //inputs.push_back({"", "I " + to_string(arguments_number->value), {"int", 4}});
-        }
-        if (shared_ptr<IdentifierNode> arguments_Identifier = dynamic_pointer_cast<IdentifierNode>(arguments_node)) {
-            //inputs.push_back(findVariable(arguments_Identifier->name));
-        }
+void Function::generateFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node, const FunctionDescr& function_call_type) {
+    //reserve output space
+    int outputSize = function_call_type.type.size();
+    if (outputSize != 0) {
+        output += "SUB W I " + to_string(function_call_type.type.size()) + ",SP\n";
     }
 
-    // if (outputSize != 0) {
-    //     result += "SUB W I " + to_string(outputSize) + ",SP\n";
-    // }
+    int inputSize = 0;
 
-    // int inputSize = 0;
-    // if (inputs.size() > 0) {
-    //     for (int i = inputs.size() - 1; i >= 0; i--) {
-    //         const Variable& variable = inputs[i];
-    //         inputSize += variable.type.size;
-    //         result += "MOVE " + getMiType(variable.type.name) + " " + variable.address + ",-!SP\n";
-    //     }
-    // }
+    for (int i = function_call_type.params.size() - 1; i >= 0; i--) {
+        Type paramType =  function_call_type.params.at(i).second;
+        shared_ptr<ASTNode> arguments_node = function_call_node->arguments.at(i);
 
-    result += "CALL " + function_call_node->functionName + "\n";
-    //result += "ADD W I " + to_string(inputSize) + ",SP\n";
-    return result;
+        generateAssignment({paramType, "-!SP"}, arguments_node);
+        inputSize += paramType.size();
+    }
+
+    output += "CALL " + function_call_node->functionName + "\n";
+    if (inputSize != 0) {
+        output += "ADD W I " + to_string(inputSize) + ",SP\n";
+    }
 }
 
-int getSize(const string& type) {
-    if (type == "int") {
-        return 4;
-    }
-    if (type == "short") {
-        return 2;
-    }
-    if (type == "char") {
-        return 1;
-    }
-    if (type == "float") {
-        return 4;
-    }
-    if (type == "double") {
-        return 8;
-    };
-    if (type == "void") {
-        return 0;
-    }
-
-    cout << "invalid type: " << type << " for getSize" << endl;
-    exit(-1);
-}
-
-string getMiType(const string& type) {
-    if (type == "int") {
-        return "W";
-    }
-    if (type == "short") {
-        return "H";
-    }
-    if (type == "char") {
-        return "B";
-    }
-    if (type == "float") {
-        return "F";
-    }
-    if (type == "double") {
-        return "D";
-    };
-
-    cout << "invalid type: " << type << " for getSize" << endl;
-    exit(-1);
-}
-
-string Function::getAssigment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression) {
-    string result;
-    string declarationValue;
+void Function::generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression) {
+    string assignment;
 
     if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node_expression)) {
-        declarationValue = "I " + to_string(numberNode->value);
+        assignment = "I " + to_string(numberNode->value);
     } else if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node_expression)) {
-        //const Variable var = findVariable(identifier_node->name);
-        //declarationValue = var.address;
+        assignment = localVariableMap.at(identifier_node->name).address;
     } else if (const shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(node_expression)) {
         FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
-        output += getFunctionCall(function_call_node, function_call_type);
+        generateFunctionCall(function_call_node, function_call_type);
         output += "MOVE " + function_call_type.type.miType() + " !SP+,R0\n";
-        declarationValue = "R0";
+        assignment = "R0";
     }
     else {
-        return "";
+        throw runtime_error("invalid assignment AST Node");
     }
 
-    result += "MOVE " + assign_variable.type.miType() + " " + declarationValue + "," + assign_variable.address + "\n";
-    return result;
+    output += "MOVE " + assign_variable.type.miType() + " " + assignment + "," + assign_variable.address + "\n";
+}
+
+int Function::addVariables(const unordered_map<string, Type>& variables) {
+    unordered_set<string> params;
+    params.reserve(function_descr_own.params.size());
+
+    int paramOffset = 0;
+    for (const auto&[name, type]:function_descr_own.params) {
+        params.insert(name);
+        string address = to_string(64+paramOffset)+"+!R13";
+        paramOffset += type.size();
+        localVariableMap[name] = {type, address};
+    }
+
+    //add return variable
+    localVariableMap["return"] = {function_descr_own.type,to_string(64+paramOffset)+"+!R13"};
+
+
+    int localOffset = 0;
+    for (auto & [name, type]: variables) {
+        if (params.count(name)) {
+            continue;
+        }
+        localOffset += type.size();
+        string address = "-"+to_string(localOffset)+"+!R13";
+        localVariableMap[name] = {type, address};
+    }
+    return localOffset;
+}
+
+void Function::generateOutput(const shared_ptr<FunctionCallNode>& output) {
+    for (int i = 0; i < output->arguments.size(); i++) {
+        shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(output->arguments.at(i));
+        Type outputType = localVariableMap.at(identifier_node->name).type;
+        generateAssignment({outputType,"R"+to_string(i)},output->arguments.at(i));
+    }
 }
 
 string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDescr>& function_descrs, const unordered_map<string, unordered_map<string, Type>>& variables) {
@@ -171,7 +166,7 @@ string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDesc
     output += "MOVE W I H'00FFFF',SP\n";
     output += "CALL main\n";
     output += "HALT\n";
-    for (int i = 0; i < ast.size()-1; i++) {
+    for (int i = 0; i < ast.size(); i++) {
         shared_ptr<FunctionDefinitionNode> func = dynamic_pointer_cast<FunctionDefinitionNode>(ast[i]);
         Function function = Function(func, variables.at(func->functionName), function_descrs);
         output += function.getOutput();

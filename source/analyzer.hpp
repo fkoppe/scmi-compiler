@@ -9,21 +9,12 @@
 
 using namespace std;
 
-/*TODO:
-- check for same function names and one main function ✅
-- check params and add to variableList ✅
-- check forbidden identifier names ✅
-- check for not declared variables ✅
-- created variable list <name,type> ✅
-- check for not declared function calls -> functionList ✅
-- check for same type when assigning (variable & function call) ✅
-- check for same type -> function params ✅
-- check for type max number when immediate value. Ex: char x = 256 ✅
-*/
+const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
+    "int","short","char","float","double","return","void"
+};
 
-// const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
-//     "int","short","char","float","double","return","void"
-// };
+const unordered_set<string> FORBIDDEN_SUBSTRING = {"__return__"};
+const unordered_set<string> SPECIAL_FUNCTIONS = {"output@"};
 
 struct FunctionDescr {
     string name;
