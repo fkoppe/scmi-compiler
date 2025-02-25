@@ -11,6 +11,7 @@ using namespace std;
 #include <vector>
 #include <sstream>
 
+const std::string INLINE_COMMENT = "//";
 
 std::string readFile(const std::string& path);
 

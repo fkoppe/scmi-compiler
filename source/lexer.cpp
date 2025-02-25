@@ -52,36 +52,36 @@ vector<string> split(const string& str, char delimiter) {
 
 TokenType getToken(const string& word) {
     if(KEYWORD_SET.count(word)) {
-        return KEYWORD;
+        return TokenType::KEYWORD;
     }
 
     if(CONTROL_SET.count(word)) {
-        return CONTROL;
+        return TokenType::CONTROL;
     }
 
     switch (word[0]) {
         case '{':
-            return L_BRACE;
+            return TokenType::L_BRACE;
         case '}':
-            return R_BRACE;
+            return TokenType::R_BRACE;
         case '(':
-            return L_PAREN;
+            return TokenType::L_PAREN;
         case ')':
-            return R_PAREN;
+            return TokenType::R_PAREN;
         case '[':
-            return L_BRACK;
+            return TokenType::L_BRACK;
         case ']':
-            return R_BRACK;
+            return TokenType::R_BRACK;
         case '=':
-            return ASSIGN;
+            return TokenType::ASSIGN;
         case ';':
-            return SEMICOLON;
+            return TokenType::SEMICOLON;
         case ',':
-            return COMMA;
+            return TokenType::COMMA;
     };
 
     if(isalpha(word[0])) {
-        return IDENTIFIER;
+        return TokenType::IDENTIFIER;
     }
 
     if(isdigit(word[0])) {
@@ -102,9 +102,9 @@ TokenType getToken(const string& word) {
 
         if (digit) {
             if (hex) {
-                return NUMBER_HEX;
+                return TokenType::NUMBER_HEX;
             }
-            return NUMBER;
+            return TokenType::NUMBER;
         }
 
         cout << "found invalid number declaration: " << word << endl;

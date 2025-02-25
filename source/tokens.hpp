@@ -9,9 +9,7 @@
 #include <vector>
 #include <unordered_set>
 
-using namespace std;
-
-const unordered_set<string> KEYWORD_SET = {
+const std::unordered_set<std::string> KEYWORD_SET = {
     "void",
     "int",
     "short",
@@ -20,7 +18,7 @@ const unordered_set<string> KEYWORD_SET = {
     "double",
 };
 
-const unordered_set<string> CONTROL_SET = {
+const std::unordered_set<std::string> CONTROL_SET = {
     "return",
     "if",
     "else",
@@ -28,7 +26,7 @@ const unordered_set<string> CONTROL_SET = {
     "for",
 };
 
-enum TokenType {
+enum class TokenType {
     KEYWORD,
     CONTROL,
     IDENTIFIER,
@@ -48,10 +46,11 @@ enum TokenType {
 
 struct Token {
     TokenType type;
-    string value;
+    std::string value;
+
+    const char* getName();
 };
 
-const char* tokenTypeName(TokenType name);
-void printTokens(std::vector<Token> tokens);
+void printToken(std::vector<Token> tokens);
 
 #endif //TOKENS_HPP
