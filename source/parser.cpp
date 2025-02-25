@@ -137,7 +137,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
     //Handle variable declaration
     //keyword identifier = ... ;
     if (peek().type == TokenType::KEYWORD && peek2().type == TokenType::IDENTIFIER && peek3().type == TokenType::ASSIGN) {
-        string varType = tokens[current].getTypeName();
+        auto varType = tokens[current].type;
         advance();
 
         expect(TokenType::IDENTIFIER, "Expected variable name after type");
@@ -155,7 +155,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         }
 
         expect(TokenType::SEMICOLON, "Expected ';' at the end of declaration");
-        return make_shared<VariableDeclarationNode>(varType, varName, value);
+        return make_shared<VariableDeclarationNode>(toTypeType(varType), varName, value);
     }
 
 
