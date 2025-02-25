@@ -2,7 +2,61 @@
 
 #include <iostream>
 
-const char* Token::getName(){
+#include "token.hpp"
+#include <utility>
+#include <sstream>
+
+TypeType toTypeType(string name)
+{
+    if(name == "void") {
+        return TypeType::VOID;
+    }
+    if(name == "char") {
+        return TypeType::CHAR;
+    }
+    if(name == "short") {
+        return TypeType::SHORT;
+    }
+    if(name == "float") {
+        return TypeType::FLOAT;
+    }
+    if(name == "double") {
+        return TypeType::DOUBLE;
+    }
+    if(name == "int") {
+        return TypeType::INT;
+    }
+
+    cout << "Unknown TypeType: " << name << endl;
+    exit(-1);
+}
+
+KeywordType toKeywordType(string name)
+{
+    if(name == "return") {
+        return KeywordType::RETURN;
+    }
+    if(name == "if") {
+        return KeywordType::IF;
+    }
+    if(name == "else") {
+        return KeywordType::ELSE;
+    }
+    if(name == "while") {
+        return KeywordType::WHILE;
+    }
+    if(name == "for") {
+        return KeywordType::FOR;
+    }
+
+    return KeywordType::TYPE;
+}
+
+Token::Token(TokenType type_) {
+    type = type_;
+}
+
+const char* Token::getTypeName(){
     switch (type) {
     case TokenType::KEYWORD:
         return "keyword";
@@ -24,8 +78,6 @@ const char* Token::getName(){
         return "=";
     case TokenType::NUMBER:
         return "number";
-    case TokenType::NUMBER_HEX:
-        return "number_hex";
     case TokenType::SEMICOLON:
         return ";";
     case TokenType::COMMA:
@@ -37,10 +89,18 @@ const char* Token::getName(){
     }
 }
 
-void printToken(std::vector<Token> tokens) {
+string Token::where() {
+    stringstream ss;
+
+    ss << "(line " << line << ":" << num << ")";
+
+    return ss.str();
+}
+
+void printToken(vector<Token> tokens) {
     for(int i = 0; i < tokens.size(); i++) {
-        std::cout << tokens[i].getName() << " ";
+        cout << tokens[i].getTypeName() << " ";
     }
 
-    std::cout << std::endl;
+    cout << endl;
 }

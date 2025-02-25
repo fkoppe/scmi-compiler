@@ -8,26 +8,24 @@
 #include "analyzer.hpp"
 
 int main() {
+    //auto tokens = lexString(readFile("../code.sc"));
 
+    Lexer lexer;
+    vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return;  }");
 
-    auto tokens = lexString(readFile("../code.sc"));
-    //auto tokens = lexString("void main(int y,int z){int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return; return ggt(); }");
-
-    Token eof = { TokenType::END_OF_FILE, "" };
-    tokens.push_back(eof);
-
-    std::cout << "=== LEXER Output ===\n";
+    cout << "\n=== LEXER Output ===\n";
     printToken(tokens);
+    cout << "====================\n";
 
     try {
         Parser parser = Parser(tokens);
-        std::vector<std::shared_ptr<ASTNode>> ast = parser.parse();
+        auto ast = parser.parse();
 
-        std::cout << "\n\n=== AST Output ===\n";
-
+        cout << "\n\n=== AST Output ===\n";
         for (const auto& node : ast) {
             node->print();
         }
+        cout << "\n\n==================\n";
 
 
 
@@ -36,15 +34,15 @@ int main() {
 
         auto analysis = analyze(ast);
 
-        std::cout << "Semantic analysis successful!\n";
+        cout << "Semantic analysis successful!\n";
 
 
-        std::cout << "\n\n=== COMPILE Output ===\n";
+        cout << "\n\n=== COMPILE Output ===\n";
+        //cout << compile(ast) << endl;
+        cout << "\n\n======================\n";
 
-        //cout << compile(ast) << std::endl;
-
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << "\n";
+    } catch (const exception& e) {
+        cerr << e.what() << "\n";
     }
 
     return 0;

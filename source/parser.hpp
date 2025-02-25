@@ -6,28 +6,30 @@
 #include <memory>
 #include "token.hpp"
 
+using namespace std;
+
 // Parser-Klasse
 class Parser {
 private:
-    std::vector<Token> tokens;
-    size_t current;
+    vector<Token> tokens;
+    size_t current = 0;
 
     Token peek();
     Token peek2();
     Token peek3();
     Token advance();
     bool match(TokenType expected);
-    void expect(TokenType expected, const std::string& errorMessage);
+    void expect(TokenType expected, const string& errorMessage);
 
 public:
-    Parser(std::vector<Token> tokens);
+    Parser(vector<Token> tokens);
 
     // Neue Rückgabewerte: AST-Knoten
-    std::shared_ptr<ASTNode> parseExpression();
-    std::shared_ptr<ASTNode> parseFunctionCall();
-    std::shared_ptr<ASTNode> parseStatement();
+    shared_ptr<ASTNode> parseExpression();
+    shared_ptr<ASTNode> parseFunctionCall();
+    shared_ptr<ASTNode> parseStatement();
 
-    std::vector<std::shared_ptr<ASTNode>> parse(); // Neuer Haupt-Parser
+    vector<shared_ptr<ASTNode>> parse(); // Neuer Haupt-Parser
 };
 
 #endif // PARSER_H

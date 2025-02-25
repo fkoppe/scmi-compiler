@@ -1,25 +1,27 @@
-//
-// Created by cedric on 20.02.25.
-//
-
 #ifndef LEXER_HPP
 #define LEXER_HPP
+
 #include "token.hpp"
 
-using namespace std;
 #include <string>
 #include <vector>
 #include <sstream>
 
-const std::string INLINE_COMMENT = "//";
+using namespace std;
 
-std::string readFile(const std::string& path);
+class Lexer {
+public:
+    vector<Token> lexText(const string& text);
+private:
+    uint64_t line = 0;
+    uint64_t num = 0;
+    string word;
+    vector<Token> result;
 
-vector<Token> lexString(const string& data);
-string removeWhitespace(const string& word);
-void replaceAll(string& result, const string& from, const string& to);
-vector<string> split(const string& str, char delimiter);
+    void processWord();
+};
+
+string readFile(const string& path);
 TokenType getToken(const string& word);
-
 
 #endif //LEXER_HPP

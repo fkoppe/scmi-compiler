@@ -2,6 +2,8 @@
 #define KEYWORD_HPP
 
 #include <string>
+#include <utility>
+
 
 using namespace std;
 
@@ -27,7 +29,7 @@ public:
             case TypeType::CHAR:   return 1;
             case TypeType::FLOAT:  return 4;
             case TypeType::DOUBLE: return 8;
-            default: throw runtime_error("TypeType type error in size()");
+            default: throw string("TypeType type error in size()");
         }
     }
 
@@ -38,7 +40,7 @@ public:
             case TypeType::CHAR:   return "B";
             case TypeType::FLOAT:  return "F";
             case TypeType::DOUBLE: return "D";
-            default: throw runtime_error("no miType error");
+            default: return "";
         }
     }
 };
@@ -51,7 +53,6 @@ static Type convertStringToType(const string& name) {
     if (name == "char")  return Type(TypeType::CHAR);
     if (name == "float") return Type(TypeType::FLOAT);
     if (name == "double") return Type(TypeType::DOUBLE);
-    throw runtime_error(name + " is not a valid type name");
 }
 
 #endif
