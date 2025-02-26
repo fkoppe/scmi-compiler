@@ -74,6 +74,9 @@ vector<Token> Lexer::lexText(const string& text) {
                 num = 0;
             } else if(' ' == character) {
                 num++;
+            } else if(stopSymbols.count(character)) {
+                word.push_back(character);
+                processWord();
             } else {
                 started_word = true;
                 word.push_back(character);
@@ -101,10 +104,6 @@ vector<Token> Lexer::lexText(const string& text) {
             word.push_back(character);
             processWord();
         }
-    }
-
-    if(word.size() > 0) {
-        processWord();
     }
 
     cout << "\nLexer reached EOF" << endl;
