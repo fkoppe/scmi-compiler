@@ -7,10 +7,11 @@ void main() {
 char ggt(char x, int y){
     int z = 1;
     int a = 1;
-    int b = 2;
-    if(a==b) {
-        int x = 0;
-        b = 2;
+    char b = 2;
+    if(a) {
+        b = 1;
+        if(b){
+        }
     }
     else {
         a = 1;

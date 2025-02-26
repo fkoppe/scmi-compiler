@@ -11,9 +11,9 @@
 TODO:
 - Move small type to big type ✅
 - If statement:
--   condition
--   then/else normal überprüfen + keine declearations
-- rework getVariableType
+-   condition ✅
+-   then/else normal überprüfen + keine declearations ✅
+- rework getVariableType✅
 
 */
 
@@ -45,8 +45,6 @@ public:
     unordered_map<string, Type> getVariableList();
     string getName();
 
-
-
 private:
     const static int maxInt = std::numeric_limits<int32_t>::max();
     const static int minInt = std::numeric_limits<int32_t>::min();
@@ -58,8 +56,10 @@ private:
     unordered_map<string, Type> variableList; // Stores (variable name -> type)
     unordered_map<string, bool> isConstant; // Stores (variable name -> const status)
     string name;
+    shared_ptr<FunctionDefinitionNode> function_node;
     vector<FunctionDescr> function_descrs;
 
+    Type getOnlyVariableType(const shared_ptr<ASTNode>&);
     Type getCastType(Type, Type);
     Type getVariableType(const shared_ptr<ASTNode>&, const Type&);
     FunctionDescr findFunctionDescr(const string&);
@@ -71,7 +71,7 @@ private:
     void checkDeclaration(const shared_ptr<VariableDeclarationNode>&);
     void checkParams();
     void checkCondition(const shared_ptr<ASTNode>&);
-    Type getOnlyVariableType(const shared_ptr<ASTNode>&);
+    void checkNode(const shared_ptr<ASTNode>&, bool);
 };
 
 #endif // SEMANTIC_ANALYZER_H

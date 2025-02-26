@@ -56,36 +56,12 @@ void checkFunctionNames(const vector<FunctionDescr>& function_descrs) {
 SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<FunctionDescr>& function_descrs) {
     name = function_node->functionName;
     this->function_descrs = function_descrs;
+    this->function_node = function_node;
 
     checkParams();
 
     for (const shared_ptr<ASTNode>& node : function_node->body) {
-        if (const shared_ptr<VariableDeclarationNode> var = dynamic_pointer_cast<VariableDeclarationNode>(node)) {
-            checkDeclaration(var);
-            checkAssignment(make_shared<AssignmentNode>(make_shared<IdentifierNode>(var->varName), var->value));
-        }
-        else if (const shared_ptr<AssignmentNode> ass = dynamic_pointer_cast<AssignmentNode>(node)) {
-            checkAssignment(ass);
-        }
-        else if (const shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)) {
-            FunctionDescr function_descr = checkFunctionCall(function_call);
-            checkIdentifierType(function_call->functionName, function_descr.type, "", Type(TypeType::VOID));
-        }
-        else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(node) ) {
-            Type definition = function_node->returnType;
-            Type input = getVariableType(return_value->value, definition);
-            checkIdentifierType(function_node->functionName, definition, "<returnValue>", input);
-        }
-        else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(node)) {
-            if (function_node->returnType.getEnum() != TypeType::VOID) {
-                cout << "return value ["<< function_node->returnType.toString() <<"] need to be specified in '"<< function_node->functionName <<"'" << endl;
-                exit(-1);
-            }
-        }
-        else if (const shared_ptr<IfNode> if_node = dynamic_pointer_cast<IfNode>(node)) {
-            //checkCondition
-            checkCondition(if_node->condition);
-        }
+        checkNode(node, true);
     }
 }
 
@@ -277,7 +253,49 @@ void SemanticAnalyzer::checkCondition(const shared_ptr<ASTNode>& condition_node)
     if (const shared_ptr<ComparisonNode> comp = dynamic_pointer_cast<ComparisonNode>(condition_node)) {
         Type comp1 = getOnlyVariableType(comp->left);
         Type comp2 = getOnlyVariableType(comp->right);
-        checkIdentifierType("<ComparisonLeft", comp1, "<ComparisonRight>", comp2);
+        checkIdentifierType("<ComparisonLeft>", comp1, "<ComparisonRight>", comp2);
+    }
+}
+
+void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declaration) {
+    if (const shared_ptr<VariableDeclarationNode> var = dynamic_pointer_cast<VariableDeclarationNode>(node)) {
+        if (!declaration) {
+            cout << "Variable declarations are not allowed in ifStatement/Loop in function '"<< this->name << "'" <<endl;
+            exit(-1);
+        }
+
+        checkDeclaration(var);
+        checkAssignment(make_shared<AssignmentNode>(make_shared<IdentifierNode>(var->varName), var->value));
+    }
+    else if (const shared_ptr<AssignmentNode> ass = dynamic_pointer_cast<AssignmentNode>(node)) {
+        checkAssignment(ass);
+    }
+    else if (const shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)) {
+        FunctionDescr function_descr = checkFunctionCall(function_call);
+        checkIdentifierType(function_call->functionName, function_descr.type, "", Type(TypeType::VOID));
+    }
+    else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(node) ) {
+        Type definition = function_node->returnType;
+        Type input = getVariableType(return_value->value, definition);
+        checkIdentifierType(function_node->functionName, definition, "<returnValue>", input);
+    }
+    else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(node)) {
+        if (function_node->returnType.getEnum() != TypeType::VOID) {
+            cout << "return value ["<< function_node->returnType.toString() <<"] need to be specified in '"<< function_node->functionName <<"'" << endl;
+            exit(-1);
+        }
+    }
+    else if (const shared_ptr<IfNode> if_node = dynamic_pointer_cast<IfNode>(node)) {
+        //checkCondition
+        checkCondition(if_node->condition);
+
+        for (auto x: if_node->thenBlock) {
+                checkNode(x, false);
+        }
+
+        for (auto x: if_node->elseBlock) {
+            checkNode(x, false);
+        }
     }
 }
 
