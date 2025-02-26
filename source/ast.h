@@ -270,6 +270,18 @@ private:
     }
 };
 
+// AST Node for logical NOT (!expr)
+class LogicalNotNode : public ASTNode {
+public:
+    std::shared_ptr<ASTNode> operand;
 
+    explicit LogicalNotNode(std::shared_ptr<ASTNode> expr)
+        : operand(std::move(expr)) {}
+
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "LogicalNotExpression(!)\n";
+        operand->print(indent + 2);
+    }
+};
 
 #endif // AST_H
