@@ -35,10 +35,12 @@ Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const
     for (const shared_ptr<ASTNode>& bodyElement: functionNode->body) {
         if (shared_ptr<VariableDeclarationNode> variable_declaration_node = dynamic_pointer_cast<VariableDeclarationNode>(bodyElement)) {
             generateAssignment(localVariableMap.at(variable_declaration_node->varName), variable_declaration_node->value);
-        } else if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
+        }
+        else if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
             generateAssignment(localVariableMap.at(assignment_node->variable->name), assignment_node);
-        } else if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
-            if (function_call_node->functionName == "output@") {
+        }
+        else if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
+            if (function_call_node->functionName == OUTPUT_FUNCTION) {
                 generateOutput(function_call_node);
                 continue;
             }
@@ -48,10 +50,12 @@ Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const
 
             //no need because function call as body-element is always void -> analyzer
             //output += "ADD W I " + to_string(function_descr.type.size()) + ",SP\n";
-        } else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(bodyElement) ) {
+        }
+        else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(bodyElement) ) {
             generateAssignment(localVariableMap.at("return"),return_value->value);
             output += "JUMP " + returnLabel+"\n";
-        } else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(bodyElement)) {
+        }
+        else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(bodyElement)) {
             output += "JUMP " + returnLabel+"\n";
         }
     }
@@ -106,22 +110,33 @@ void Function::generateFunctionCall(const shared_ptr<FunctionCallNode>& function
 
 void Function::generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression) {
     string assignment;
+    Type assignType;
 
     if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node_expression)) {
         assignment = "I " + to_string(numberNode->value);
-    } else if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node_expression)) {
-        assignment = localVariableMap.at(identifier_node->name).address;
-    } else if (const shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(node_expression)) {
+        assignType = assign_variable.type;
+    }
+    else if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node_expression)) {
+        LocalVariable local_variable = localVariableMap.at(identifier_node->name);
+        assignment = local_variable.address;
+        assignType = local_variable.type;
+    }
+    else if (const shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(node_expression)) {
         FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
         generateFunctionCall(function_call_node, function_call_type);
         output += "MOVE " + function_call_type.type.miType() + " !SP+,R0\n";
         assignment = "R0";
+        assignType = function_call_type.type;
     }
     else {
         throw runtime_error("invalid assignment AST Node");
     }
 
     output += "MOVE " + assign_variable.type.miType() + " " + assignment + "," + assign_variable.address + "\n";
+
+    if (assignType.getEnum() != assign_variable.type.getEnum()) {
+        output += "SH I -"+to_string((assign_variable.type.size()-assignType.size())*8)+","+assign_variable.address+","+assign_variable.address+"\n";
+    }
 }
 
 int Function::addVariables(const unordered_map<string, Type>& variables) {

@@ -1,23 +1,20 @@
 void main() {
-    char x = 5;
-    int a=3;
-    int y = ggt(x, 1);
-    test();
-    output@(x,a,y);
+    int x = ggt(1,2);
+    int a=x;
+    output@(a);
 }
 
-int ggt(char x, int y){
+char ggt(char x, int y){
     int z = 1;
 
-    if(a) {
+    if(a==b) {
+        int x = 0;
         b = 2;
-    } else if(a) {
-        a = 2
-    } else {
+    }
+    else {
         a = 1;
     }
-
-    return z;
+    return 1;
 }
 
 void test() {

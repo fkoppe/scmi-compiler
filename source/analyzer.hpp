@@ -7,6 +7,15 @@
 #include <limits>
 #include <unordered_set>
 
+/*
+TODO:
+- Move small type to big type ✅
+- If statement:
+-   condition
+-   then/else normal überprüfen + keine declearations
+
+*/
+
 using namespace std;
 
 const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
@@ -14,7 +23,7 @@ const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
 };
 
 const unordered_set<string> FORBIDDEN_SUBSTRING = {"__return__"};
-const unordered_set<string> SPECIAL_FUNCTIONS = {"output@"};
+const string OUTPUT_FUNCTION = {"output@"};
 
 struct FunctionDescr {
     string name;
@@ -50,6 +59,7 @@ private:
     string name;
     vector<FunctionDescr> function_descrs;
 
+    Type getCastType(Type, Type);
     Type getVariableType(const shared_ptr<ASTNode>&, const Type&);
     FunctionDescr findFunctionDescr(const string&);
     Type findVariable(const string&);
@@ -59,6 +69,7 @@ private:
     void checkAssignment(const shared_ptr<AssignmentNode>&);
     void checkDeclaration(const shared_ptr<VariableDeclarationNode>&);
     void checkParams();
+    void checkCondition(const shared_ptr<ASTNode>&);
 };
 
 #endif // SEMANTIC_ANALYZER_H

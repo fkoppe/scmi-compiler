@@ -10,9 +10,9 @@ using namespace std;
 
 enum class TypeType {
     VOID,
-    INT,
-    SHORT,
     CHAR,
+    SHORT,
+    INT,
     FLOAT,
     DOUBLE
 };

@@ -3,11 +3,6 @@
 #include <unordered_set>
 #include <utility>
 
-// void SemanticAnalyzer::analyze(std::vector<std::shared_ptr<ASTNode>>& ast) {
-//     for (auto& node : ast) {
-//         analyzeNode(node);
-//     }
-// }
 pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> analyze(vector<shared_ptr<ASTNode>>& nodes) {
     vector<FunctionDescr> function_descrs;
     unordered_map<string, unordered_map<string,Type>> mapVariableList;
@@ -68,20 +63,28 @@ SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& fun
         if (const shared_ptr<VariableDeclarationNode> var = dynamic_pointer_cast<VariableDeclarationNode>(node)) {
             checkDeclaration(var);
             checkAssignment(make_shared<AssignmentNode>(make_shared<IdentifierNode>(var->varName), var->value));
-        } else if (const shared_ptr<AssignmentNode> ass = dynamic_pointer_cast<AssignmentNode>(node)) {
+        }
+        else if (const shared_ptr<AssignmentNode> ass = dynamic_pointer_cast<AssignmentNode>(node)) {
             checkAssignment(ass);
-        } else if (const shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)) {
+        }
+        else if (const shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)) {
             FunctionDescr function_descr = checkFunctionCall(function_call);
             checkIdentifierType(function_call->functionName, function_descr.type, "", Type(TypeType::VOID));
-        } else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(node) ) {
+        }
+        else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(node) ) {
             Type definition = function_node->returnType;
             Type input = getVariableType(return_value->value, definition);
             checkIdentifierType(function_node->functionName, definition, "<returnValue>", input);
-        } else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(node)) {
+        }
+        else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(node)) {
             if (function_node->returnType.getEnum() != TypeType::VOID) {
                 cout << "return value ["<< function_node->returnType.toString() <<"] need to be specified in '"<< function_node->functionName <<"'" << endl;
                 exit(-1);
             }
+        }
+        else if (const shared_ptr<IfNode> if_node = dynamic_pointer_cast<IfNode>(node)) {
+            //checkCondition
+            checkCondition(if_node->condition);
         }
     }
 }
@@ -105,14 +108,25 @@ void SemanticAnalyzer::checkDeclaration(const shared_ptr<VariableDeclarationNode
     }
 }
 
+Type SemanticAnalyzer::getCastType(Type found, Type expected) {
+    int foundNum = static_cast<int>(found.getEnum());
+    int expectedNum = static_cast<int>(expected.getEnum());
+
+    if (foundNum <= expectedNum) {
+        return expected;
+    }
+    return found;
+}
+
 Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Type& expected_type) {
     if (shared_ptr<IdentifierNode> ident = dynamic_pointer_cast<IdentifierNode>(node)){
         checkIdentifier(ident);
-        return findVariable(ident->name);
+        Type foundType = findVariable(ident->name);
+        return getCastType(foundType, expected_type);
     }
     if (shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)){
         FunctionDescr call_func = checkFunctionCall(function_call);
-        return call_func.type;
+        return getCastType(call_func.type, expected_type);
     }
     if (shared_ptr<NumberNode> number_node = dynamic_pointer_cast<NumberNode>(node)) {
         if (expected_type.getEnum() == TypeType::INT && number_node->value < maxInt && number_node->value > minInt) {
@@ -158,7 +172,7 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
         }
     }
 
-    if (function_call_node->functionName == "output@" && function_call_node->arguments.size() <= 13) {
+    if (function_call_node->functionName == OUTPUT_FUNCTION && function_call_node->arguments.size() <= 13) {
         found = true;
         vector<pair<string,Type>> params;
 
@@ -232,6 +246,9 @@ void SemanticAnalyzer::checkParams() {
             cout << "Parameter '" << name << "' for function '"<< this->name << "' already exists" << endl;
         }
     }
+}
+
+void SemanticAnalyzer::checkCondition(const shared_ptr<ASTNode>& condition_node) {
 }
 
 void checkForbiddenIdentifier(const string& name) {
