@@ -57,11 +57,17 @@ SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& fun
     name = function_node->functionName;
     this->function_descrs = function_descrs;
     this->function_node = function_node;
+    this->checkReturn = false;
 
     checkParams();
 
     for (const shared_ptr<ASTNode>& node : function_node->body) {
         checkNode(node, true);
+    }
+
+    if (function_node->returnType.getEnum() != TypeType::VOID && !checkReturn) {
+        cout << "function '" << name << "' ["<<function_node->returnType.toString()<<"] has no return" << endl;
+        exit(-1);
     }
 }
 
@@ -105,17 +111,20 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
         return getCastType(call_func.type, expected_type);
     }
     if (shared_ptr<NumberNode> number_node = dynamic_pointer_cast<NumberNode>(node)) {
-        if (expected_type.getEnum() == TypeType::INT && number_node->value < maxInt && number_node->value > minInt) {
+        if (expected_type.getEnum() == TypeType::INT && number_node->value <= maxInt && number_node->value >= minInt) {
             return Type(TypeType::INT);
         }
-        if (expected_type.getEnum() == TypeType::SHORT && number_node->value < maxShort && number_node->value > minShort) {
+        if (expected_type.getEnum() == TypeType::SHORT && number_node->value <= maxShort && number_node->value >= minShort) {
             return Type(TypeType::SHORT);
         }
-        if (expected_type.getEnum() == TypeType::CHAR && number_node->value < maxChar && number_node->value > minChar) {
+        if (expected_type.getEnum() == TypeType::CHAR && number_node->value <= maxChar && number_node->value >= minChar) {
             return Type(TypeType::CHAR);
         }
         cout << "Invalid number: " << number_node->value << " for type '" << expected_type.toString() << "' in function '" << this->name << "'" << endl;
         exit(-1);
+    }
+    if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node)) {
+        return expected_type;
     }
     throw runtime_error("Unrecognized node type for getVariableType");
 }
@@ -278,6 +287,7 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
         Type definition = function_node->returnType;
         Type input = getVariableType(return_value->value, definition);
         checkIdentifierType(function_node->functionName, definition, "<returnValue>", input);
+        checkReturn = true;
     }
     else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(node)) {
         if (function_node->returnType.getEnum() != TypeType::VOID) {
@@ -286,8 +296,8 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
         }
     }
     else if (const shared_ptr<IfNode> if_node = dynamic_pointer_cast<IfNode>(node)) {
-        //checkCondition
-        checkCondition(if_node->condition);
+        //checkCondition: not needed
+        //checkCondition(if_node->condition);
 
         for (auto x: if_node->thenBlock) {
                 checkNode(x, false);

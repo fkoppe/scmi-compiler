@@ -8,7 +8,8 @@ char ggt(char x, int y){
     int z = 1;
     int a = 1;
     char b = 2;
-    if(a) {
+    int boolean = a && b;
+    if(a == b && a == b) {
         b = 1;
         if(b){
         }
@@ -16,7 +17,7 @@ char ggt(char x, int y){
     else {
         a = 1;
     }
-    return 1;
+    return 0;
 }
 
 void test() {

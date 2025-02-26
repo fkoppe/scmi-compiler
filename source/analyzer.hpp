@@ -14,8 +14,9 @@ TODO:
 -   condition ✅
 -   then/else normal überprüfen + keine declearations ✅
 - rework getVariableType✅
-
+- check return✅
 */
+
 
 using namespace std;
 
@@ -58,6 +59,7 @@ private:
     string name;
     shared_ptr<FunctionDefinitionNode> function_node;
     vector<FunctionDescr> function_descrs;
+    bool checkReturn;
 
     Type getOnlyVariableType(const shared_ptr<ASTNode>&);
     Type getCastType(Type, Type);

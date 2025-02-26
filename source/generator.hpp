@@ -14,6 +14,16 @@
 
 using namespace std;
 
+/*
+TODO:
+- logical expression
+- If statement:
+-   condition ✅
+-   then/else normal überprüfen + keine declearations ✅
+- rework getVariableType✅
+- check return✅
+*/
+
 string compile(const vector<shared_ptr<ASTNode>>&, const vector<FunctionDescr>&, const unordered_map<string, unordered_map<string, Type>>&);
 
 struct LocalVariable {
