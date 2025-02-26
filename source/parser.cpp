@@ -43,27 +43,65 @@ void Parser::expect(TokenType expected, const string& errorMessage) {
     }
 }
 
-shared_ptr<ASTNode> Parser::parseExpression() {
+std::shared_ptr<ASTNode> Parser::parseExpression() {
+    // Parse first operand (could be a number, identifier, or another expression)
+    std::shared_ptr<ASTNode> left;
+
     if (match(TokenType::NUMBER)) {
-        return make_shared<NumberNode>(stoi(tokens[current - 1].raw));
+        left = std::make_shared<NumberNode>(std::stoi(tokens[current - 1].raw));
     }
     else if (match(TokenType::IDENTIFIER)) {
-        shared_ptr<IdentifierNode> identifier = make_shared<IdentifierNode>(tokens[current - 1].raw);
-        if (match(TokenType::ASSIGN)) {
-            auto expr = parseExpression();
-            return make_shared<AssignmentNode>(identifier, expr);
-        }
-        return identifier;  // Falls es nur eine Variable ist
+        left = std::make_shared<IdentifierNode>(tokens[current - 1].raw);
     }
     else if (match(TokenType::L_PAREN)) {
-        auto expr = parseExpression();
+        left = parseExpression();
         expect(TokenType::R_PAREN, "Expected closing ')'");
-        return expr;
+    }
+    else {
+        std::cerr << "Parse Error: Invalid expression: "
+                  << tokens[current - 1].getTypeName()
+                  << " '" << tokens[current - 1].raw
+                  << "' " << tokens[current - 1].where() << "\n";
+        exit(1);
     }
 
-    cerr << "Parse Error: Invalid expression: " << tokens[current - 1].getTypeName() << " '" << tokens[current - 1].raw  << "' "<< tokens[current - 1].where() << "\n";
-    exit(1);
+    // Handle comparison operators
+    while (true) {
+        if (match(TokenType::ASSIGN)) {
+            if (match(TokenType::ASSIGN)) { // `==`
+                left = std::make_shared<ComparisonNode>(ComparisonType::EQUAL, left, parseExpression());
+            } else {
+                std::cerr << "Parse Error: Expected '==' but found only '='\n";
+                exit(1);
+            }
+        }
+        else if (match(TokenType::NOT)) {
+            expect(TokenType::ASSIGN, "Expected '!=' but found only '!'");
+            left = std::make_shared<ComparisonNode>(ComparisonType::NOT_EQUAL, left, parseExpression());
+        }
+        else if (match(TokenType::LESS)) {
+            if (match(TokenType::ASSIGN)) { // `<=`
+                left = std::make_shared<ComparisonNode>(ComparisonType::LESS_EQUAL, left, parseExpression());
+            } else {
+                left = std::make_shared<ComparisonNode>(ComparisonType::LESS_THAN, left, parseExpression());
+            }
+        }
+        else if (match(TokenType::GREATER)) {
+            if (match(TokenType::ASSIGN)) { // `>=`
+                left = std::make_shared<ComparisonNode>(ComparisonType::GREATER_EQUAL, left, parseExpression());
+            } else {
+                left = std::make_shared<ComparisonNode>(ComparisonType::GREATER_THAN, left, parseExpression());
+            }
+        }
+        else {
+            break; // No more comparison operators, exit loop
+        }
+    }
+
+    return left;
 }
+
+
 
 
 // Parse a function call
@@ -247,7 +285,9 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         while (peek().type == TokenType::KEYWORD && peek().keyword == KeywordType::ELSE) {
             advance(); // Consume `else`
 
-            if (match(TokenType::KEYWORD) && peek().keyword == KeywordType::IF) {
+            if (peek().type == TokenType::KEYWORD && peek().keyword == KeywordType::IF) {
+                //advance(); // Consume `if`
+
                 // `else if` is treated as an `if` inside the `elseBlock`
                 elseBlock.push_back(parseStatement());
                 return std::make_shared<IfNode>(condition, thenBlock, elseBlock);

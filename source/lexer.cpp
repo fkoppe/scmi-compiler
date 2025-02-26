@@ -32,7 +32,7 @@ vector<Token> Lexer::lexText(const string& text) {
     bool started_word = false;
     bool skipping_line = false;
 
-    const unordered_set stopSymbols = {'(', ')', '{', '}', '[', ']', ';', ',', '=', '\n', '\t', ' '};
+    const unordered_set stopSymbols = {'(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '!', '\n', '\t', ' '};
     const unordered_set skipSymbols = {'\r'};
 
     cout << "\nLexing input..." << endl;
@@ -140,6 +140,12 @@ TokenType getToken(const string& word) {
             return TokenType::R_BRACK;
         case '=':
             return TokenType::ASSIGN;
+        case '<':
+            return TokenType::LESS;
+        case '>':
+            return TokenType::GREATER;
+        case '!':
+            return TokenType::NOT;
         case ';':
             return TokenType::SEMICOLON;
         case ',':
