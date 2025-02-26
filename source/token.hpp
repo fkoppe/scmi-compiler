@@ -68,6 +68,8 @@ enum class TokenType {
     NOT,
     GREATER,
     LESS,
+    AND,
+    OR,
     END_OF_FILE,
 };
 

@@ -43,8 +43,13 @@ void Parser::expect(TokenType expected, const string& errorMessage) {
     }
 }
 
+
 std::shared_ptr<ASTNode> Parser::parseExpression() {
-    // Parse first operand (could be a number, identifier, or another expression)
+    return parseLogicalExpression();
+}
+
+// Parse comparison expressions (`==`, `!=`, `<`, `>`, `<=`, `>=`)
+std::shared_ptr<ASTNode> Parser::parseComparisonExpression() {
     std::shared_ptr<ASTNode> left;
 
     if (match(TokenType::NUMBER)) {
@@ -60,8 +65,8 @@ std::shared_ptr<ASTNode> Parser::parseExpression() {
     else {
         std::cerr << "Parse Error: Invalid expression: "
                   << tokens[current - 1].getTypeName()
-                  << " '" << tokens[current - 1].raw
-                  << "' " << tokens[current - 1].where() << "\n";
+                  << " '" << tokens[current - 1].raw << "' "
+                  << tokens[current - 1].where() << "\n";
         exit(1);
     }
 
@@ -69,7 +74,7 @@ std::shared_ptr<ASTNode> Parser::parseExpression() {
     while (true) {
         if (match(TokenType::ASSIGN)) {
             if (match(TokenType::ASSIGN)) { // `==`
-                left = std::make_shared<ComparisonNode>(ComparisonType::EQUAL, left, parseExpression());
+                left = std::make_shared<ComparisonNode>(ComparisonType::EQUAL, left, parseComparisonExpression());
             } else {
                 std::cerr << "Parse Error: Expected '==' but found only '='\n";
                 exit(1);
@@ -77,20 +82,20 @@ std::shared_ptr<ASTNode> Parser::parseExpression() {
         }
         else if (match(TokenType::NOT)) {
             expect(TokenType::ASSIGN, "Expected '!=' but found only '!'");
-            left = std::make_shared<ComparisonNode>(ComparisonType::NOT_EQUAL, left, parseExpression());
+            left = std::make_shared<ComparisonNode>(ComparisonType::NOT_EQUAL, left, parseComparisonExpression());
         }
         else if (match(TokenType::LESS)) {
             if (match(TokenType::ASSIGN)) { // `<=`
-                left = std::make_shared<ComparisonNode>(ComparisonType::LESS_EQUAL, left, parseExpression());
+                left = std::make_shared<ComparisonNode>(ComparisonType::LESS_EQUAL, left, parseComparisonExpression());
             } else {
-                left = std::make_shared<ComparisonNode>(ComparisonType::LESS_THAN, left, parseExpression());
+                left = std::make_shared<ComparisonNode>(ComparisonType::LESS_THAN, left, parseComparisonExpression());
             }
         }
         else if (match(TokenType::GREATER)) {
             if (match(TokenType::ASSIGN)) { // `>=`
-                left = std::make_shared<ComparisonNode>(ComparisonType::GREATER_EQUAL, left, parseExpression());
+                left = std::make_shared<ComparisonNode>(ComparisonType::GREATER_EQUAL, left, parseComparisonExpression());
             } else {
-                left = std::make_shared<ComparisonNode>(ComparisonType::GREATER_THAN, left, parseExpression());
+                left = std::make_shared<ComparisonNode>(ComparisonType::GREATER_THAN, left, parseComparisonExpression());
             }
         }
         else {
@@ -101,6 +106,26 @@ std::shared_ptr<ASTNode> Parser::parseExpression() {
     return left;
 }
 
+// Parse logical expressions (`&&`, `||`)
+std::shared_ptr<ASTNode> Parser::parseLogicalExpression() {
+    std::shared_ptr<ASTNode> left = parseComparisonExpression(); // Parse comparisons first
+
+    while (true) {
+        if (match(TokenType::AND)) {
+            expect(TokenType::AND, "Expected '&&' but found only '&'");
+            left = std::make_shared<LogicalNode>(LogicalType::AND, left, parseComparisonExpression());
+        }
+        else if (match(TokenType::OR)) {
+            expect(TokenType::OR, "Expected '||' but found only '|'");
+            left = std::make_shared<LogicalNode>(LogicalType::OR, left, parseComparisonExpression());
+        }
+        else {
+            break; // No more logical operators, exit loop
+        }
+    }
+
+    return left;
+}
 
 
 
