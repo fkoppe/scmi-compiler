@@ -10,7 +10,7 @@ char ggt(char x, int y){
     int z = 1;
     int a = 1;
     char b = 2;
-    int boolean = a && b;
+    int boolean = a && b || z && b || z;
     if(b && b) {
         b = 1;
         if(b){

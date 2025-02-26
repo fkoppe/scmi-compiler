@@ -128,6 +128,10 @@ void Function::generateAssignment(const LocalVariable& assign_variable, const sh
         assignment = "R0";
         assignType = function_call_type.type;
     }
+    else if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node_expression)) {
+        vector<LogicalExpression> logical_expressions;
+        getLogicalExpressions(logical_node, logical_expressions);
+    }
     else {
         throw runtime_error("invalid assignment AST Node");
     }
@@ -173,6 +177,25 @@ void Function::generateOutput(const shared_ptr<FunctionCallNode>& output) {
         Type outputType = localVariableMap.at(identifier_node->name).type;
         generateAssignment({outputType,"R"+to_string(i)},output->arguments.at(i));
     }
+}
+
+string Function::getLogicalExpressions(const shared_ptr<ASTNode>& node, vector<LogicalExpression>& output) {
+    if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node)) {
+        return to_string(numberNode->value);
+        //assignment = "I " + to_string(numberNode->value);
+        //assignType = assign_variable.type;
+    }
+    if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node)) {
+        LocalVariable local_variable = localVariableMap.at(identifier_node->name);
+        //assignment = local_variable.address;
+        //assignType = local_variable.type;
+        return identifier_node->name;
+    }
+    if (const shared_ptr<LogicalNode> log = dynamic_pointer_cast<LogicalNode>(node)) {
+        output.push_back({getLogicalExpressions(log->left, output), getLogicalExpressions(log->right, output), log->logicalType});
+        return "";
+    }
+    throw runtime_error("invalid logical expression AST Node");
 }
 
 string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDescr>& function_descrs, const unordered_map<string, unordered_map<string, Type>>& variables) {

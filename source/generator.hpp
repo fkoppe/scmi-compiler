@@ -16,12 +16,9 @@ using namespace std;
 
 /*
 TODO:
-- logical expression
-- If statement:
--   condition ✅
--   then/else normal überprüfen + keine declearations ✅
-- rework getVariableType✅
-- check return✅
+- recursion analyze logicalExpression tree -> write in array✅
+- figure out cmp and jump way to set comparsionNode
+- output code with array to generate logicalExpression with stack operations
 */
 
 string compile(const vector<shared_ptr<ASTNode>>&, const vector<FunctionDescr>&, const unordered_map<string, unordered_map<string, Type>>&);
@@ -29,6 +26,12 @@ string compile(const vector<shared_ptr<ASTNode>>&, const vector<FunctionDescr>&,
 struct LocalVariable {
     Type type;
     string address;
+};
+
+struct LogicalExpression {
+    string expression_L;
+    string expression_R;
+    LogicalType op;
 };
 
 class Function {
@@ -49,8 +52,8 @@ class Function {
         void generateFunctionCall(const shared_ptr<FunctionCallNode>&, const FunctionDescr&);
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
         int addVariables(const unordered_map<string, Type>&);
-
         void generateOutput(const shared_ptr<FunctionCallNode>&);
+        string getLogicalExpressions(const shared_ptr<ASTNode>&, vector<LogicalExpression>&);
 
 
 
