@@ -65,6 +65,9 @@ enum class TokenType {
     NUMBER,
     SEMICOLON,
     COMMA,
+    NOT,
+    GREATER,
+    LESS,
     END_OF_FILE,
 };
 
