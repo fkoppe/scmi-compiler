@@ -45,7 +45,30 @@ void Parser::expect(TokenType expected, const string& errorMessage) {
 
 
 std::shared_ptr<ASTNode> Parser::parseExpression() {
-    return parseLogicalExpression();
+    std::shared_ptr<ASTNode> left = parseUnaryExpression(); // Handle `!x` before `&&` and `||`
+
+    while (true) {
+        if (match(TokenType::AND)) {
+            expect(TokenType::AND, "Expected '&&' but found only '&'");
+            left = std::make_shared<LogicalNode>(LogicalType::AND, left, parseUnaryExpression());
+        }
+        else if (match(TokenType::OR)) {
+            expect(TokenType::OR, "Expected '||' but found only '|'");
+            left = std::make_shared<LogicalNode>(LogicalType::OR, left, parseUnaryExpression());
+        }
+        else {
+            break; // No more logical operators, exit loop
+        }
+    }
+
+    return left;
+}
+
+std::shared_ptr<ASTNode> Parser::parseUnaryExpression() {
+    if (match(TokenType::NOT)) { // If `!` is found, create a `LogicalNotNode`
+        return std::make_shared<LogicalNotNode>(parseUnaryExpression()); // Recursively parse operand
+    }
+    return parseComparisonExpression(); // If no `!`, process normal comparisons
 }
 
 // Parse comparison expressions (`==`, `!=`, `<`, `>`, `<=`, `>=`)
@@ -105,29 +128,6 @@ std::shared_ptr<ASTNode> Parser::parseComparisonExpression() {
 
     return left;
 }
-
-// Parse logical expressions (`&&`, `||`)
-std::shared_ptr<ASTNode> Parser::parseLogicalExpression() {
-    std::shared_ptr<ASTNode> left = parseComparisonExpression(); // Parse comparisons first
-
-    while (true) {
-        if (match(TokenType::AND)) {
-            expect(TokenType::AND, "Expected '&&' but found only '&'");
-            left = std::make_shared<LogicalNode>(LogicalType::AND, left, parseComparisonExpression());
-        }
-        else if (match(TokenType::OR)) {
-            expect(TokenType::OR, "Expected '||' but found only '|'");
-            left = std::make_shared<LogicalNode>(LogicalType::OR, left, parseComparisonExpression());
-        }
-        else {
-            break; // No more logical operators, exit loop
-        }
-    }
-
-    return left;
-}
-
-
 
 // Parse a function call
 shared_ptr<ASTNode> Parser::parseFunctionCall() {

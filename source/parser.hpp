@@ -27,7 +27,7 @@ public:
     // Neue Rückgabewerte: AST-Knoten
     shared_ptr<ASTNode> parseExpression();
     shared_ptr<ASTNode> parseComparisonExpression();
-    shared_ptr<ASTNode> parseLogicalExpression();
+    shared_ptr<ASTNode> parseUnaryExpression();
     shared_ptr<ASTNode> parseFunctionCall();
     shared_ptr<ASTNode> parseStatement();
 
