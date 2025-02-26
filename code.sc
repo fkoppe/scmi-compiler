@@ -1,6 +1,8 @@
 void main() {
     int x = ggt(1,2);
     int a=x;
+    if(a){
+    }
     output@(a);
 }
 
@@ -9,7 +11,7 @@ char ggt(char x, int y){
     int a = 1;
     char b = 2;
     int boolean = a && b;
-    if(a == b && a == b) {
+    if(b && b) {
         b = 1;
         if(b){
         }

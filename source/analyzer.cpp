@@ -124,34 +124,37 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
         exit(-1);
     }
     if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node)) {
+        checkLogicalExpression(logical_node);
         return expected_type;
     }
     throw runtime_error("Unrecognized node type for getVariableType");
 }
 
-Type SemanticAnalyzer::getOnlyVariableType(const shared_ptr<ASTNode>& node) {
+void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
     if (shared_ptr<IdentifierNode> ident = dynamic_pointer_cast<IdentifierNode>(node)){
         checkIdentifier(ident);
-        return findVariable(ident->name);
     }
-    if (shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)){
+    else if (shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)){
         FunctionDescr call_func = checkFunctionCall(function_call);
-        return call_func.type;
     }
-    if (shared_ptr<NumberNode> number_node = dynamic_pointer_cast<NumberNode>(node)) {
+    else if (shared_ptr<NumberNode> number_node = dynamic_pointer_cast<NumberNode>(node)) {
         if (number_node->value < maxInt && number_node->value > minInt) {
-            return Type(TypeType::INT);
+
         }
-        if (number_node->value < maxShort && number_node->value > minShort) {
-            return Type(TypeType::SHORT);
+        else if (number_node->value < maxShort && number_node->value > minShort) {
+
         }
-        if (number_node->value < maxChar && number_node->value > minChar) {
-            return Type(TypeType::CHAR);
+        else if (number_node->value < maxChar && number_node->value > minChar) {
+
         }
-        cout << "Invalid number: " << number_node->value << endl;
-        exit(-1);
+        else {
+            cout << "Invalid number: " << number_node->value << endl;
+            exit(-1);
+        }
     }
-    throw runtime_error("Unrecognized node type for getVariableType");
+    else {
+        throw runtime_error("Unrecognized node type for checkExpression");
+    }
 }
 
 FunctionDescr SemanticAnalyzer::findFunctionDescr(const string& name) {
@@ -258,11 +261,13 @@ void SemanticAnalyzer::checkParams() {
     }
 }
 
-void SemanticAnalyzer::checkCondition(const shared_ptr<ASTNode>& condition_node) {
-    if (const shared_ptr<ComparisonNode> comp = dynamic_pointer_cast<ComparisonNode>(condition_node)) {
-        Type comp1 = getOnlyVariableType(comp->left);
-        Type comp2 = getOnlyVariableType(comp->right);
-        checkIdentifierType("<ComparisonLeft>", comp1, "<ComparisonRight>", comp2);
+void SemanticAnalyzer::checkLogicalExpression(const shared_ptr<ASTNode>& condition_node) {
+    if (const shared_ptr<LogicalNode> logical = dynamic_pointer_cast<LogicalNode>(condition_node)) {
+        checkLogicalExpression(logical->left);
+        checkLogicalExpression(logical->right);
+    }
+    else {
+        checkExpression(condition_node);
     }
 }
 
@@ -296,14 +301,14 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
         }
     }
     else if (const shared_ptr<IfNode> if_node = dynamic_pointer_cast<IfNode>(node)) {
-        //checkCondition: not needed
-        //checkCondition(if_node->condition);
 
-        for (auto x: if_node->thenBlock) {
+        checkLogicalExpression(if_node->condition);
+
+        for (const auto& x: if_node->thenBlock) {
                 checkNode(x, false);
         }
 
-        for (auto x: if_node->elseBlock) {
+        for (const auto& x: if_node->elseBlock) {
             checkNode(x, false);
         }
     }

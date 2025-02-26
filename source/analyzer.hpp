@@ -61,7 +61,6 @@ private:
     vector<FunctionDescr> function_descrs;
     bool checkReturn;
 
-    Type getOnlyVariableType(const shared_ptr<ASTNode>&);
     Type getCastType(Type, Type);
     Type getVariableType(const shared_ptr<ASTNode>&, const Type&);
     FunctionDescr findFunctionDescr(const string&);
@@ -72,8 +71,10 @@ private:
     void checkAssignment(const shared_ptr<AssignmentNode>&);
     void checkDeclaration(const shared_ptr<VariableDeclarationNode>&);
     void checkParams();
-    void checkCondition(const shared_ptr<ASTNode>&);
+    void checkLogicalExpression(const shared_ptr<ASTNode>&);
     void checkNode(const shared_ptr<ASTNode>&, bool);
+    void checkExpression(const shared_ptr<ASTNode>&);
+
 };
 
 #endif // SEMANTIC_ANALYZER_H
