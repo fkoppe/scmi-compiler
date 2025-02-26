@@ -6,7 +6,8 @@ void main() {
 
 char ggt(char x, int y){
     int z = 1;
-
+    int a = 1;
+    int b = 2;
     if(a==b) {
         int x = 0;
         b = 2;

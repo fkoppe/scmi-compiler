@@ -13,6 +13,7 @@ TODO:
 - If statement:
 -   condition
 -   then/else normal überprüfen + keine declearations
+- rework getVariableType
 
 */
 
@@ -70,6 +71,7 @@ private:
     void checkDeclaration(const shared_ptr<VariableDeclarationNode>&);
     void checkParams();
     void checkCondition(const shared_ptr<ASTNode>&);
+    Type getOnlyVariableType(const shared_ptr<ASTNode>&);
 };
 
 #endif // SEMANTIC_ANALYZER_H
