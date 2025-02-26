@@ -82,6 +82,16 @@ const char* Token::getTypeName(){
         return ";";
     case TokenType::COMMA:
         return ",";
+    case TokenType::NOT:
+        return "!";
+    case TokenType::GREATER:
+        return ">";
+    case TokenType::LESS:
+        return "<";
+    case TokenType::AND:
+        return "&";
+    case TokenType::OR:
+        return "|";
     case TokenType::END_OF_FILE:
         return "EOF";
     default:

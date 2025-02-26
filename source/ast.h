@@ -238,6 +238,37 @@ private:
     }
 };
 
+// Enum for logical operators
+enum class LogicalType {
+    AND,  // &&
+    OR    // ||
+};
+
+// AST Node for logical expressions (x && y, a || b)
+class LogicalNode : public ASTNode {
+public:
+    LogicalType logicalType;
+    std::shared_ptr<ASTNode> left;
+    std::shared_ptr<ASTNode> right;
+
+    LogicalNode(LogicalType type, std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs)
+        : logicalType(type), left(std::move(lhs)), right(std::move(rhs)) {}
+
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "LogicalExpression(" << getLogicalOperator() << ")\n";
+        left->print(indent + 2);
+        right->print(indent + 2);
+    }
+
+private:
+    std::string getLogicalOperator() const {
+        switch (logicalType) {
+        case LogicalType::AND: return "&&";
+        case LogicalType::OR: return "||";
+        }
+        return "UNKNOWN";
+    }
+};
 
 
 
