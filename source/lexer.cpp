@@ -19,20 +19,16 @@ void Lexer::processWord() {
     token.raw = word;
 
     if(type == TokenType::KEYWORD) {
-        if(TYPE_SET.count(word)) {
-            token.keyword = toKeywordType(word);
-        }
+        token.keyword = toKeywordType(word);
     }
 
     cout << word << " ";
     result.push_back(token);
+
     word.clear();
 }
 
 vector<Token> Lexer::lexText(const string& text) {
-    uint64_t line = 0;
-    uint64_t num = 0;
-
     bool started_word = false;
     bool skipping_line = false;
 
@@ -68,12 +64,12 @@ vector<Token> Lexer::lexText(const string& text) {
 
         if(!started_word) {
             if('\t' == character) {
-                num += 4;
+                num += 3;
             } else if('\n' == character) {
                 line++;
                 num = 0;
             } else if(' ' == character) {
-                num++;
+
             } else if(stopSymbols.count(character)) {
                 word.push_back(character);
                 processWord();
@@ -87,6 +83,7 @@ vector<Token> Lexer::lexText(const string& text) {
 
         if(!stopSymbols.count(character)) {
             word.push_back(character);
+
             continue;
         }
 
@@ -94,12 +91,12 @@ vector<Token> Lexer::lexText(const string& text) {
         processWord();
 
         if('\t' == character) {
-            num += 4;
+            num += 3;
         } else if('\n' == character) {
             line++;
             num = 0;
         } else if(' ' == character) {
-            num++;
+
         } else {
             word.push_back(character);
             processWord();

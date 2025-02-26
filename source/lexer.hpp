@@ -13,7 +13,7 @@ class Lexer {
 public:
     vector<Token> lexText(const string& text);
 private:
-    uint64_t line = 0;
+    uint64_t line = 1;
     uint64_t num = 0;
     string word;
     vector<Token> result;

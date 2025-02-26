@@ -61,7 +61,7 @@ shared_ptr<ASTNode> Parser::parseExpression() {
         return expr;
     }
 
-    cerr << "Parse Error: Invalid expression: " << tokens[current - 1].getTypeName() << " '" << tokens[current - 1].raw << "'" << endl;
+    cerr << "Parse Error: Invalid expression: " << tokens[current - 1].getTypeName() << " '" << tokens[current - 1].raw  << "' "<< tokens[current - 1].where() << "\n";
     exit(1);
 }
 
@@ -224,8 +224,44 @@ shared_ptr<ASTNode> Parser::parseStatement() {
             return make_shared<AssignmentNode>(make_shared<IdentifierNode>(identifier), expr);
         }
 
-        cerr << "Parse Error: Unexpected token in statement: " << peek().getTypeName() << " '" << peek().raw << "'\n";
+        cerr << "Parse Error: Unexpected token in statement: " << peek().getTypeName() << " '" << peek().raw << "' "<< peek().where() << "\n";
         exit(1);
+    }
+
+    // Handle `if` statement
+    if (peek().type == TokenType::KEYWORD && peek().keyword == KeywordType::IF) {
+        advance(); // Consume `if`
+        expect(TokenType::L_PAREN, "Expected '(' after 'if'");
+        auto condition = parseExpression(); // Parse the condition
+        expect(TokenType::R_PAREN, "Expected ')' after condition");
+
+        expect(TokenType::L_BRACE, "Expected '{' to start 'if' block");
+        std::vector<std::shared_ptr<ASTNode>> thenBlock;
+        while (!match(TokenType::R_BRACE)) {
+            thenBlock.push_back(parseStatement()); // Recursively parse statements inside `if`
+        }
+
+        std::vector<std::shared_ptr<ASTNode>> elseBlock;
+
+        // Handle `else if`
+        while (peek().type == TokenType::KEYWORD && peek().keyword == KeywordType::ELSE) {
+            advance(); // Consume `else`
+
+            if (match(TokenType::KEYWORD) && peek().keyword == KeywordType::IF) {
+                // `else if` is treated as an `if` inside the `elseBlock`
+                elseBlock.push_back(parseStatement());
+                return std::make_shared<IfNode>(condition, thenBlock, elseBlock);
+            }
+
+            // Handle regular `else`
+            expect(TokenType::L_BRACE, "Expected '{' to start 'else' block");
+            while (!match(TokenType::R_BRACE)) {
+                elseBlock.push_back(parseStatement()); // Parse `else` block
+            }
+            break; // `else` must be the last branch
+        }
+
+        return std::make_shared<IfNode>(condition, thenBlock, elseBlock);
     }
 
     //return, goto, continue, break
@@ -251,7 +287,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         }
     }
 
-    cerr << "Parse Error: Unexpected statement: " << peek().getTypeName() << " '" << peek().raw << "'\n";
+    cerr << "Parse Error: Unexpected statement: " << peek().getTypeName() << " '" << peek().raw << "' " << peek().where() << "\n";
     exit(1);
 }
 

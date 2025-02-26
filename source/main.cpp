@@ -11,8 +11,10 @@ int main() {
     //auto tokens = lexString(readFile("../code.sc"));
 
     Lexer lexer;
-    //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return;  }");
-    vector<Token> tokens = lexer.lexText(readFile("../code.sc"));
+    //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return; if(a) { b = 0; }  }");
+    vector<Token> tokens = lexer.lexText(readFile("../../code.sc"));
+
+
     cout << "\n=== LEXER Output ===\n";
     printToken(tokens);
     cout << "====================\n";
@@ -21,11 +23,11 @@ int main() {
         Parser parser = Parser(tokens);
         auto ast = parser.parse();
 
-        cout << "\n\n=== AST Output ===\n";
+        cout << "\n=== AST Output ===\n";
         for (const auto& node : ast) {
             node->print();
         }
-        cout << "\n\n==================\n";
+        cout << "==================\n";
 
 
 
@@ -35,11 +37,12 @@ int main() {
         auto analysis = analyze(ast);
 
         cout << "Semantic analysis successful!\n";
+        std::cout << "=================================\n";
 
 
-        cout << "\n\n=== COMPILE Output ===\n";
+        cout << "\n=== COMPILE Output ===\n";
         cout << compile(ast, analysis.first, analysis.second) << endl;
-        cout << "\n\n======================\n";
+        cout << "======================\n";
 
     } catch (const exception& e) {
         cerr << e.what() << "\n";

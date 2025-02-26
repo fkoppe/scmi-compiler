@@ -166,6 +166,37 @@ public:
     }
 };
 
+// AST Node for `if` statements
+class IfNode : public ASTNode {
+public:
+    std::shared_ptr<ASTNode> condition;
+    std::vector<std::shared_ptr<ASTNode>> thenBlock;
+    std::vector<std::shared_ptr<ASTNode>> elseBlock;
+
+    IfNode(std::shared_ptr<ASTNode> cond,
+           std::vector<std::shared_ptr<ASTNode>> thenBlk,
+           std::vector<std::shared_ptr<ASTNode>> elseBlk = {})
+        : condition(std::move(cond)), thenBlock(std::move(thenBlk)), elseBlock(std::move(elseBlk)) {}
+
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "IfStatement\n";
+
+        std::cout << std::string(indent + 2, ' ') << "Condition\n";
+        condition->print(indent + 4);
+
+        std::cout << std::string(indent + 2, ' ') << "Then Block\n";
+        for (const auto& stmt : thenBlock) {
+            stmt->print(indent + 4);
+        }
+
+        if (!elseBlock.empty()) {
+            std::cout << std::string(indent + 2, ' ') << "Else Block\n";
+            for (const auto& stmt : elseBlock) {
+                stmt->print(indent + 4);
+            }
+        }
+    }
+};
 
 
 #endif // AST_H
