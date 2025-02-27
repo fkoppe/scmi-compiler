@@ -70,6 +70,11 @@ enum class TokenType {
     LESS,
     AND,
     OR,
+    ADD,
+    SUB,
+    MULT,
+    DIV,
+    MOD,
     END_OF_FILE,
 };
 

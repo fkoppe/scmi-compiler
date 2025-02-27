@@ -25,7 +25,7 @@ const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
 };
 
 const unordered_set<string> FORBIDDEN_SUBSTRING = {"__return__"};
-const string OUTPUT_FUNCTION = {"output@"};
+const string OUTPUT_FUNCTION = "@output";
 
 struct FunctionDescr {
     string name;

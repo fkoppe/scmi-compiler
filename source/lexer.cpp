@@ -43,14 +43,15 @@ vector<Token> Lexer::lexText(const string& text) {
         if(skipping_line) {
             if('\n' == character) {
                 skipping_line = false;
-                continue;
             }
+            continue;
         }
 
         if('/' == character) {
             if(text.size() > i + 1) {
                 if(text.at(i + 1) == '/') {
                     skipping_line = true;
+                    line++;
                     continue;
                 }
             }
@@ -150,13 +151,23 @@ TokenType getToken(const string& word) {
             return TokenType::AND;
         case '|':
             return TokenType::OR;
+        case '+':
+            return TokenType::ADD;
+        case '-':
+            return TokenType::SUB;
+        case '*':
+            return TokenType::MULT;
+        case '/':
+            return TokenType::DIV;
+        case '%':
+            return TokenType::MOD;
         case ';':
             return TokenType::SEMICOLON;
         case ',':
             return TokenType::COMMA;
     };
 
-    if(isalpha(word[0])) {
+    if(isalpha(word[0]) || word[0] == '@') {
         return TokenType::IDENTIFIER;
     }
 

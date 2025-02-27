@@ -28,8 +28,11 @@ public:
     shared_ptr<ASTNode> parseExpression();
     shared_ptr<ASTNode> parseOrExpression();
     shared_ptr<ASTNode> parseAndExpression();
+    shared_ptr<ASTNode> parseAdditiveExpression();
+    shared_ptr<ASTNode> parseMultiplicativeExpression();
     shared_ptr<ASTNode> parseComparisonExpression();
     shared_ptr<ASTNode> parseUnaryExpression();
+    shared_ptr<ASTNode> parsePrimaryExpression();
     shared_ptr<ASTNode> parseFunctionCall();
     shared_ptr<ASTNode> parseStatement();
 

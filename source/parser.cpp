@@ -45,13 +45,13 @@ void Parser::expect(TokenType expected, const string& errorMessage) {
 
 
 std::shared_ptr<ASTNode> Parser::parseExpression() {
-    return parseOrExpression(); // Einstiegspunkt für logische Operationen
+    return parseOrExpression(); // Logical OR is the top-level expression.
 }
 
 std::shared_ptr<ASTNode> Parser::parseOrExpression() {
-    std::shared_ptr<ASTNode> left = parseAndExpression(); // `&&` hat höhere Priorität
+    std::shared_ptr<ASTNode> left = parseAndExpression(); // `&&` has higher precedence than `||`.
 
-    while (match(TokenType::OR)) {  // `||` hat niedrigere Priorität
+    while (match(TokenType::OR)) {
         expect(TokenType::OR, "Expected '||' but found only '|'");
         left = std::make_shared<LogicalNode>(LogicalType::OR, left, parseAndExpression());
     }
@@ -60,37 +60,128 @@ std::shared_ptr<ASTNode> Parser::parseOrExpression() {
 }
 
 std::shared_ptr<ASTNode> Parser::parseAndExpression() {
-    std::shared_ptr<ASTNode> left = parseUnaryExpression(); // `!x` vor `&&`
+    std::shared_ptr<ASTNode> left = parseComparisonExpression(); // Comparison before AND.
 
-    while (match(TokenType::AND)) { // `&&` wird zuerst verarbeitet
+    while (match(TokenType::AND)) {
         expect(TokenType::AND, "Expected '&&' but found only '&'");
-        left = std::make_shared<LogicalNode>(LogicalType::AND, left, parseUnaryExpression());
+        left = std::make_shared<LogicalNode>(LogicalType::AND, left, parseComparisonExpression());
     }
 
     return left;
 }
 
+// Comparison expressions (`==`, `!=`, `<`, `>`, `<=`, `>=`) go here.
+std::shared_ptr<ASTNode> Parser::parseComparisonExpression() {
+    std::shared_ptr<ASTNode> left = parseAdditiveExpression(); // Additions/subtractions are done first.
 
-std::shared_ptr<ASTNode> Parser::parseUnaryExpression() {
-    if (match(TokenType::NOT)) { // If `!` is found, create a `LogicalNotNode`
-        return std::make_shared<LogicalNotNode>(parseUnaryExpression()); // Recursively parse operand
+    while (true) {
+        if (match(TokenType::ASSIGN)) {
+            if (match(TokenType::ASSIGN)) { // `==`
+                left = std::make_shared<LogicalNode>(LogicalType::EQUAL, left, parseAdditiveExpression());
+            } else {
+                std::cerr << "Parse Error: Expected '==' but found only '='\n";
+                exit(1);
+            }
+        }
+        else if (match(TokenType::NOT)) {
+            expect(TokenType::ASSIGN, "Expected '!=' but found only '!'");
+            left = std::make_shared<LogicalNode>(LogicalType::NOT_EQUAL, left, parseAdditiveExpression());
+        }
+        else if (match(TokenType::LESS)) {
+            if (match(TokenType::ASSIGN)) { // `<=`
+                left = std::make_shared<LogicalNode>(LogicalType::LESS_EQUAL, left, parseAdditiveExpression());
+            } else {
+                left = std::make_shared<LogicalNode>(LogicalType::LESS_THAN, left, parseAdditiveExpression());
+            }
+        }
+        else if (match(TokenType::GREATER)) {
+            if (match(TokenType::ASSIGN)) { // `>=`
+                left = std::make_shared<LogicalNode>(LogicalType::GREATER_EQUAL, left, parseAdditiveExpression());
+            } else {
+                left = std::make_shared<LogicalNode>(LogicalType::GREATER_THAN, left, parseAdditiveExpression());
+            }
+        }
+        else {
+            break; // Exit loop if no comparison operators are found.
+        }
     }
-    return parseComparisonExpression(); // If no `!`, process normal comparisons
+
+    return left;
 }
 
-// Parse comparison expressions (`==`, `!=`, `<`, `>`, `<=`, `>=`)
-std::shared_ptr<ASTNode> Parser::parseComparisonExpression() {
-    std::shared_ptr<ASTNode> left;
+// Addition and Subtraction (`+` and `-`) have lower precedence than Multiplication.
+std::shared_ptr<ASTNode> Parser::parseAdditiveExpression() {
+    std::shared_ptr<ASTNode> left = parseMultiplicativeExpression(); // First parse `*`, `/`, `%`.
 
+    while (true) {
+        if (match(TokenType::ADD)) { // `+`
+            left = std::make_shared<ArithmeticNode>(ArithmeticType::ADD, left, parseMultiplicativeExpression());
+        }
+        else if (match(TokenType::SUB)) { // `-`
+            left = std::make_shared<ArithmeticNode>(ArithmeticType::SUBTRACT, left, parseMultiplicativeExpression());
+        }
+        else {
+            break;
+        }
+    }
+
+    return left;
+}
+
+// Multiplication, Division, and Modulo (`*`, `/`, `%`) have highest precedence.
+std::shared_ptr<ASTNode> Parser::parseMultiplicativeExpression() {
+    std::shared_ptr<ASTNode> left = parseUnaryExpression(); // First handle `!x` or numbers.
+
+    while (true) {
+        if (match(TokenType::MULT)) { // `*`
+            left = std::make_shared<ArithmeticNode>(ArithmeticType::MULTIPLY, left, parseUnaryExpression());
+        }
+        else if (match(TokenType::DIV)) { // `/`
+            left = std::make_shared<ArithmeticNode>(ArithmeticType::DIVIDE, left, parseUnaryExpression());
+        }
+        else if (match(TokenType::MOD)) { // `%`
+            left = std::make_shared<ArithmeticNode>(ArithmeticType::MODULO, left, parseUnaryExpression());
+        }
+        else {
+            break;
+        }
+    }
+
+    return left;
+}
+
+// Handles numbers, variables, parentheses, and negation.
+std::shared_ptr<ASTNode> Parser::parseUnaryExpression() {
+    if (match(TokenType::NOT)) { // Logical NOT (`!x`).
+        return std::make_shared<LogicalNotNode>(parseUnaryExpression());
+    }
+    else if (match(TokenType::SUB)) { // Unary minus (`-x`).
+        return std::make_shared<ArithmeticNode>(ArithmeticType::SUBTRACT,
+                                                std::make_shared<NumberNode>(0), parseUnaryExpression());
+    }
+
+    return parsePrimaryExpression();
+}
+
+// Handles numbers, identifiers, functioncall expr, and parentheses.
+std::shared_ptr<ASTNode> Parser::parsePrimaryExpression() {
     if (match(TokenType::NUMBER)) {
-        left = std::make_shared<NumberNode>(std::stoi(tokens[current - 1].raw));
+        return std::make_shared<NumberNode>(std::stoi(tokens[current - 1].raw));
     }
-    else if (match(TokenType::IDENTIFIER)) {
-        left = std::make_shared<IdentifierNode>(tokens[current - 1].raw);
+    else if (peek().type == TokenType::IDENTIFIER) {
+        // If the next token is '(', it's a function call.
+        if (peek2().type == TokenType::L_PAREN) {
+            return parseFunctionCall();
+        } else {
+            std::string name = tokens[current].raw;
+            advance();
+            return std::make_shared<IdentifierNode>(name);
+        }
     }
-    else if (match(TokenType::L_PAREN)) {
-        left = parseExpression();
+    else if (match(TokenType::L_PAREN)) { // Handling `(expression)`
+        std::shared_ptr<ASTNode> expr = parseExpression();
         expect(TokenType::R_PAREN, "Expected closing ')'");
+        return expr;
     }
     else {
         std::cerr << "Parse Error: Invalid expression: "
@@ -100,41 +191,10 @@ std::shared_ptr<ASTNode> Parser::parseComparisonExpression() {
         exit(1);
     }
 
-    // Handle comparison operators
-    while (true) {
-        if (match(TokenType::ASSIGN)) {
-            if (match(TokenType::ASSIGN)) { // `==`
-                left = std::make_shared<LogicalNode>(LogicalType::EQUAL, left, parseComparisonExpression());
-            } else {
-                std::cerr << "Parse Error: Expected '==' but found only '='\n";
-                exit(1);
-            }
-        }
-        else if (match(TokenType::NOT)) {
-            expect(TokenType::ASSIGN, "Expected '!=' but found only '!'");
-            left = std::make_shared<LogicalNode>(LogicalType::NOT_EQUAL, left, parseComparisonExpression());
-        }
-        else if (match(TokenType::LESS)) {
-            if (match(TokenType::ASSIGN)) { // `<=`
-                left = std::make_shared<LogicalNode>(LogicalType::LESS_EQUAL, left, parseComparisonExpression());
-            } else {
-                left = std::make_shared<LogicalNode>(LogicalType::LESS_THAN, left, parseComparisonExpression());
-            }
-        }
-        else if (match(TokenType::GREATER)) {
-            if (match(TokenType::ASSIGN)) { // `>=`
-                left = std::make_shared<LogicalNode>(LogicalType::GREATER_EQUAL, left, parseComparisonExpression());
-            } else {
-                left = std::make_shared<LogicalNode>(LogicalType::GREATER_THAN, left, parseComparisonExpression());
-            }
-        }
-        else {
-            break; // No more comparison operators, exit loop
-        }
-    }
-
-    return left;
+    return nullptr; // Should never reach this.
 }
+
+
 
 // Parse a function call
 shared_ptr<ASTNode> Parser::parseFunctionCall() {
@@ -341,7 +401,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         advance();
         string name = tokens[current - 1].raw;
 
-        if(peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER) {
+        if(peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER || peek().type == TokenType::L_PAREN) {
             if(peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_PAREN) {
                 auto st = parseStatement();
 
