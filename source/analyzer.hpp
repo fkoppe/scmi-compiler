@@ -61,6 +61,7 @@ private:
     vector<FunctionDescr> function_descrs;
     bool checkReturn;
 
+    Type getArithmeticType(const shared_ptr<ArithmeticNode>&, const Type&);
     Type getCastType(Type, Type);
     Type getVariableType(const shared_ptr<ASTNode>&, const Type&);
     FunctionDescr findFunctionDescr(const string&);

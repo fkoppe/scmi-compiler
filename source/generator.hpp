@@ -35,6 +35,12 @@ struct LogicalExpression {
     LogicalType op;
 };
 
+struct ArithmeticExpression {
+    LocalVariable expression_L;
+    LocalVariable expression_R;
+    ArithmeticType op;
+};
+
 class Function {
     public:
         Function(const shared_ptr<FunctionDefinitionNode>&, const unordered_map<string, Type>&, const vector<FunctionDescr>&);
@@ -56,11 +62,14 @@ class Function {
         int addVariables(const unordered_map<string, Type>&);
         void generateOutput(const shared_ptr<FunctionCallNode>&);
         LocalVariable getLogicalExpressions(const shared_ptr<ASTNode>&, vector<LogicalExpression>&);
-        void generateLogicalExpressions(const LogicalExpression&);
+        void generateLogicalExpression(const LogicalExpression&);
         void generateShift(const Type& from, const LocalVariable& to);
         static string getCompareJump(const LogicalType);
         string getNextJumpLabel();
         void generateNodes(const vector<shared_ptr<ASTNode>>&);
+        void generateArithmeticExpression(const ArithmeticExpression&, const Type& expected_type);
+        void generateArithmeticOperation(ArithmeticType,Type);
+        LocalVariable getArithmeticExpressions(const shared_ptr<ASTNode>&, vector<ArithmeticExpression>&);
 };
 
 #endif //COMPILER_HPP

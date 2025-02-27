@@ -104,10 +104,20 @@ void Function::generateAssignment(const LocalVariable& assign_variable, const sh
         getLogicalExpressions(logical_node, logical_expressions);
 
         for (const LogicalExpression& logical_expression : logical_expressions) {
-            generateLogicalExpressions(logical_expression);
+            generateLogicalExpression(logical_expression);
         }
         assignment = "!SP+";
         assignType = Type(TypeType::INT);
+    }
+    else if (const shared_ptr<ArithmeticNode>& arithmetic_node = dynamic_pointer_cast<ArithmeticNode>(node_expression)) {
+        vector<ArithmeticExpression> arithmetic_expressions;
+        getArithmeticExpressions(arithmetic_node, arithmetic_expressions);
+
+        for (const ArithmeticExpression& arithmetic_expression : arithmetic_expressions) {
+            generateArithmeticExpression(arithmetic_expression, assign_variable.type);
+        }
+        assignment = "!SP+";
+        assignType = assign_variable.type;
     }
     else {
         throw runtime_error("invalid assignment AST Node");
@@ -172,7 +182,7 @@ LocalVariable Function::getLogicalExpressions(const shared_ptr<ASTNode>& node, v
     throw runtime_error("invalid logical expression AST Node");
 }
 
-void Function::generateLogicalExpressions(const LogicalExpression& logical_expression) {
+void Function::generateLogicalExpression(const LogicalExpression& logical_expression) {
     if (logical_expression.expression_L.address != "") {
         if (logical_expression.expression_L.type.getEnum() != TypeType::INT) {
             output += "MOVE W I 0,-!SP\n";
@@ -297,6 +307,98 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
         }
     }
 }
+
+void Function::generateArithmeticExpression(const ArithmeticExpression& arithmetic_expression, const Type& expected_type) {
+    LocalVariable l = arithmetic_expression.expression_L;
+    LocalVariable r = arithmetic_expression.expression_R;
+    if (l.address != "") {
+        if (l.type.miType() != expected_type.miType()) {
+            output += "MOVE "+expected_type.miType()+" I 0,-!SP\n";
+            output += "MOVE "+ l.type.miType() + " " + l.address + ",!SP\n";
+            generateShift(l.type, {expected_type,"!SP"});
+        }
+        else {
+            output += "MOVE "+ expected_type.miType() + " " + l.address + ",-!SP\n";
+        }
+    }
+
+    if (arithmetic_expression.expression_R.address != "") {
+        if (r.type.miType() != expected_type.miType()) {
+            output += "MOVE "+expected_type.miType()+" I 0,-!SP\n";
+            output += "MOVE "+ r.type.miType() + " " + r.address + ",!SP\n";
+            generateShift(r.type, {expected_type,"!SP"});
+        }
+        else {
+            output += "MOVE "+ expected_type.miType() + " " + r.address + ",-!SP\n";
+        }
+    }
+    generateArithmeticOperation(arithmetic_expression.op, expected_type);
+
+}
+
+void Function::generateArithmeticOperation(const ArithmeticType arithmetic, const Type type) {
+    if (arithmetic == ArithmeticType::MODULO) {
+        //b => !SP
+        //a => 4+!SP
+        //
+        //a mod b =>
+        //temp = a div b
+        //temp = b mult temp
+        //erg = a - temp
+        output += "DIV "+type.miType()+" !SP,4+!SP,R0\n"; //temp = a div b
+        output += "MULT "+type.miType()+" !SP,R0\n"; // temp = b mult temp
+        output += "SUB "+type.miType()+" R0,4+!SP\n"; // erg = a -temp
+        output += "ADD W I 4,SP\n";
+        return;
+    }
+
+
+
+    string op = "";
+
+    switch (arithmetic) {
+        case ArithmeticType::ADD:
+            op = "ADD";
+            break;
+        case ArithmeticType::SUBTRACT:
+            op = "SUB";
+            break;
+        case ArithmeticType::MULTIPLY:
+            op = "MULT";
+            break;
+        case ArithmeticType::DIVIDE:
+            op = "DIV";
+            break;
+        default: op = "";
+    }
+    /*
+    a - b
+
+    stack:
+    b
+    a
+    */
+    output += op +" "+type.miType()+" !SP,4+!SP\n";
+    output += "ADD W I 4,SP\n";
+}
+
+LocalVariable Function::getArithmeticExpressions(const shared_ptr<ASTNode>& node, vector<ArithmeticExpression>& output) {
+    if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node)) {
+        LocalVariable var = {Type(TypeType::INT), "I "+to_string(numberNode->value)};
+        return var;
+    }
+    if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node)) {
+        LocalVariable local_variable = localVariableMap.at(identifier_node->name);
+        return local_variable;
+    }
+    if (const shared_ptr<ArithmeticNode> log = dynamic_pointer_cast<ArithmeticNode>(node)) {
+        output.push_back({getArithmeticExpressions(log->left, output), getArithmeticExpressions(log->right, output), log->arithmeticType});
+        return {};
+    }
+    throw runtime_error("invalid arithmetic expression AST Node");
+}
+
+
 
 
 string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDescr>& function_descrs, const unordered_map<string, unordered_map<string, Type>>& variables) {

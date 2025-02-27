@@ -90,6 +90,17 @@ void SemanticAnalyzer::checkDeclaration(const shared_ptr<VariableDeclarationNode
     }
 }
 
+Type SemanticAnalyzer::getArithmeticType(const shared_ptr<ArithmeticNode>& arithmetic_node, const Type& expected) {
+    Type left = getVariableType(arithmetic_node->left, expected);
+    Type right = getVariableType(arithmetic_node->right, expected);
+
+    if (left.getEnum() == right.getEnum()) {
+        return left;
+    }
+    cout << "Arithmetic Expression has not the same type [" << expected.toString() << "] in function '" << this->name << "'" << endl;
+    exit(-1);
+}
+
 Type SemanticAnalyzer::getCastType(Type found, Type expected) {
     int foundNum = static_cast<int>(found.getEnum());
     int expectedNum = static_cast<int>(expected.getEnum());
@@ -126,6 +137,9 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
     if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node)) {
         checkLogicalExpression(logical_node);
         return Type(TypeType::INT);
+    }
+    if (const shared_ptr<ArithmeticNode> arithmetic_node = dynamic_pointer_cast<ArithmeticNode>(node)) {
+        return getArithmeticType(arithmetic_node, expected_type);
     }
     throw runtime_error("Unrecognized node type for getVariableType");
 }
