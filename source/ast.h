@@ -198,50 +198,16 @@ public:
     }
 };
 
-// Enum for comparison types
-enum class ComparisonType {
+// Enum for logical operators
+enum class LogicalType {
+    AND,  // &&
+    OR,    // ||
     EQUAL,          // ==
     NOT_EQUAL,      // !=
     LESS_THAN,      // <
     GREATER_THAN,   // >
     LESS_EQUAL,     // <=
     GREATER_EQUAL   // >=
-};
-
-// AST Node for comparisons (x == y, a < b, etc.)
-class ComparisonNode : public ASTNode {
-public:
-    ComparisonType compType;
-    std::shared_ptr<ASTNode> left;
-    std::shared_ptr<ASTNode> right;
-
-    ComparisonNode(ComparisonType type, std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs)
-        : compType(type), left(std::move(lhs)), right(std::move(rhs)) {}
-
-    void print(int indent = 0) const override {
-        std::cout << std::string(indent, ' ') << "ComparisonExpression(" << getComparisonOperator() << ")\n";
-        left->print(indent + 2);
-        right->print(indent + 2);
-    }
-
-private:
-    std::string getComparisonOperator() const {
-        switch (compType) {
-        case ComparisonType::EQUAL: return "==";
-        case ComparisonType::NOT_EQUAL: return "!=";
-        case ComparisonType::LESS_THAN: return "<";
-        case ComparisonType::GREATER_THAN: return ">";
-        case ComparisonType::LESS_EQUAL: return "<=";
-        case ComparisonType::GREATER_EQUAL: return ">=";
-        }
-        return "UNKNOWN";
-    }
-};
-
-// Enum for logical operators
-enum class LogicalType {
-    AND,  // &&
-    OR    // ||
 };
 
 // AST Node for logical expressions (x && y, a || b)
@@ -265,6 +231,12 @@ private:
         switch (logicalType) {
         case LogicalType::AND: return "&&";
         case LogicalType::OR: return "||";
+        case LogicalType::EQUAL: return "==";
+        case LogicalType::NOT_EQUAL: return "!=";
+        case LogicalType::LESS_THAN: return "<";
+        case LogicalType::GREATER_THAN: return ">";
+        case LogicalType::LESS_EQUAL: return "<=";
+        case LogicalType::GREATER_EQUAL: return ">=";
         }
         return "UNKNOWN";
     }
