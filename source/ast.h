@@ -256,4 +256,43 @@ public:
     }
 };
 
+// Enum for arithmetic operators
+enum class ArithmeticType {
+    ADD,       // +
+    SUBTRACT,  // -
+    MULTIPLY,  // *
+    DIVIDE,    // /
+    MODULO     // %
+};
+
+// AST Node for arithmetic expressions (e.g., x + y, a * b)
+class ArithmeticNode : public ASTNode {
+public:
+    ArithmeticType arithmeticType;
+    std::shared_ptr<ASTNode> left;
+    std::shared_ptr<ASTNode> right;
+
+    ArithmeticNode(ArithmeticType type, std::shared_ptr<ASTNode> lhs, std::shared_ptr<ASTNode> rhs)
+        : arithmeticType(type), left(std::move(lhs)), right(std::move(rhs)) {}
+
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "ArithmeticExpression(" << getOperator() << ")\n";
+        left->print(indent + 2);
+        right->print(indent + 2);
+    }
+
+private:
+    std::string getOperator() const {
+        switch (arithmeticType) {
+        case ArithmeticType::ADD: return "+";
+        case ArithmeticType::SUBTRACT: return "-";
+        case ArithmeticType::MULTIPLY: return "*";
+        case ArithmeticType::DIVIDE: return "/";
+        case ArithmeticType::MODULO: return "%";
+        }
+        return "UNKNOWN";
+    }
+};
+
+
 #endif // AST_H

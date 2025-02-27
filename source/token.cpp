@@ -92,6 +92,16 @@ const char* Token::getTypeName(){
         return "&";
     case TokenType::OR:
         return "|";
+    case TokenType::ADD:
+        return "+";
+    case TokenType::SUB:
+        return "-";
+    case TokenType::MULT:
+        return "*";
+    case TokenType::DIV:
+        return "/";
+    case TokenType::MOD:
+        return "%";
     case TokenType::END_OF_FILE:
         return "EOF";
     default:
