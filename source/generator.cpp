@@ -259,7 +259,7 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
             generateAssignment(localVariableMap.at(variable_declaration_node->varName), variable_declaration_node->value);
         }
         else if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
-            generateAssignment(localVariableMap.at(assignment_node->variable->name), assignment_node);
+            generateAssignment(localVariableMap.at(assignment_node->variable->name), assignment_node->expression);
         }
         else if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
             if (function_call_node->functionName == OUTPUT_FUNCTION) {
@@ -288,7 +288,7 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
 
             output += "MOVE W I 0,-!SP\n";
             output += "CMP W !SP,4+!SP\n";
-            output += "JEQ "+trueLabel+"\n";
+            output += "JNE "+trueLabel+"\n";
             generateNodes(if_node->elseBlock);
             output += "JUMP "+continueLabel+"\n";
             output += trueLabel+":\n";

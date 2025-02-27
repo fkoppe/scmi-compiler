@@ -1,14 +1,13 @@
 void main() {
-    int a = 0;
-    char b = 1;
-    int boolean = a < b && a == b;
-}
+    int a = 2;
+    char b = 3;
+    int res = 0;
 
-char ggt(char x, int y){
-    int z = 1;
-
-    return ggt(0,0);
-}
-
-void test() {
+    if(a==b){
+        res = 42;
+    }
+    else {
+        res = 69;
+    }
+    @output(res);
 }
