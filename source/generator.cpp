@@ -13,8 +13,10 @@ Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const
     this->function_descr_vector = function_descrs;
     this->function_descr_own = findFunctionDescr(functionName);
     this->returnLabel = functionName+"__return__";
-    localVariablePointerOffset = 0;
-    paramaterPointerOffset = 0;
+    this->localVariablePointerOffset = 0;
+    this->paramaterPointerOffset = 0;
+    this->jumpLabelNum = 0;
+
 
     output += functionName + ":\n";
 
@@ -24,41 +26,10 @@ Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const
 
     output += "MOVE W SP,R13\n";
 
-    //reset SP to sum of localVariableSize
-    //assign addresses to localVariableMap (local + parameter)
-    //...
     int declaredVariableSize = addVariables(variables);
     output += "SUB W I " + to_string(declaredVariableSize) + ",SP\n";
 
-
-
-    for (const shared_ptr<ASTNode>& bodyElement: functionNode->body) {
-        if (shared_ptr<VariableDeclarationNode> variable_declaration_node = dynamic_pointer_cast<VariableDeclarationNode>(bodyElement)) {
-            generateAssignment(localVariableMap.at(variable_declaration_node->varName), variable_declaration_node->value);
-        }
-        else if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
-            generateAssignment(localVariableMap.at(assignment_node->variable->name), assignment_node);
-        }
-        else if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
-            if (function_call_node->functionName == OUTPUT_FUNCTION) {
-                generateOutput(function_call_node);
-                continue;
-            }
-
-            FunctionDescr function_descr = findFunctionDescr(function_call_node->functionName);
-            generateFunctionCall(function_call_node, function_descr);
-
-            //no need because function call as body-element is always void -> analyzer
-            //output += "ADD W I " + to_string(function_descr.type.size()) + ",SP\n";
-        }
-        else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(bodyElement) ) {
-            generateAssignment(localVariableMap.at("return"),return_value->value);
-            output += "JUMP " + returnLabel+"\n";
-        }
-        else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(bodyElement)) {
-            output += "JUMP " + returnLabel+"\n";
-        }
-    }
+    generateNodes(functionNode->body);
 
     output += returnLabel+":\n";
     output += "MOVE W R13,SP\n";
@@ -234,11 +205,99 @@ void Function::generateLogicalExpressions(const LogicalExpression& logical_expre
         output += "OR W !SP,4+!SP\n";
         output += "ADD W I 4,SP\n";
     }
+    else {
+        output += "CMP W 4+!SP,!SP\n";
+        string trueLabel = getNextJumpLabel();
+        string falseLabel = getNextJumpLabel();
+        output += getCompareJump(logical_expression.op) + " " + trueLabel+"\n";
+        //false
+        output += "MOVE W I 0,4+!SP\n";
+        output += "ADD W I 4,SP\n";
+        output += "JUMP "+falseLabel+"\n";
+
+        //true
+        output += trueLabel+":\n";
+        output += "MOVE W I 1,4+!SP\n";
+        output += "ADD W I 4,SP\n";
+
+        output += falseLabel+":\n";
+    }
 }
 
 void Function::generateShift(const Type& from, const LocalVariable& to) {
     output += "SH I -"+to_string((to.type.size()-from.size())*8)+","+to.address+","+to.address+"\n";
 }
+
+string Function::getCompareJump(const LogicalType logical) {
+    switch (logical) {
+        case LogicalType::EQUAL:
+            return "JEQ";
+        case LogicalType::NOT_EQUAL:
+            return "JNE";
+        case LogicalType::LESS_THAN:
+            return "JLT";
+        case LogicalType::GREATER_THAN:
+            return "JGT";
+        case LogicalType::LESS_EQUAL:
+            return "JLE";
+        case LogicalType::GREATER_EQUAL:
+            return "JGE";
+        default:
+            return "";
+    }
+}
+
+string Function::getNextJumpLabel() {
+    string output = this->functionName+"__jump__"+to_string(jumpLabelNum);
+    jumpLabelNum++;
+    return output;
+}
+
+void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
+    for (const shared_ptr<ASTNode>& bodyElement: node) {
+        if (shared_ptr<VariableDeclarationNode> variable_declaration_node = dynamic_pointer_cast<VariableDeclarationNode>(bodyElement)) {
+            generateAssignment(localVariableMap.at(variable_declaration_node->varName), variable_declaration_node->value);
+        }
+        else if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
+            generateAssignment(localVariableMap.at(assignment_node->variable->name), assignment_node);
+        }
+        else if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
+            if (function_call_node->functionName == OUTPUT_FUNCTION) {
+                generateOutput(function_call_node);
+                continue;
+            }
+
+            FunctionDescr function_descr = findFunctionDescr(function_call_node->functionName);
+            generateFunctionCall(function_call_node, function_descr);
+
+            //no need because function call as body-element is always void -> analyzer
+            //output += "ADD W I " + to_string(function_descr.type.size()) + ",SP\n";
+        }
+        else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(bodyElement) ) {
+            generateAssignment(localVariableMap.at("return"),return_value->value);
+            output += "JUMP " + returnLabel+"\n";
+        }
+        else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(bodyElement)) {
+            output += "JUMP " + returnLabel+"\n";
+        }
+        else if (const shared_ptr<IfNode>& if_node = dynamic_pointer_cast<IfNode>(bodyElement)) {
+            string trueLabel = getNextJumpLabel();
+            string continueLabel = getNextJumpLabel();
+
+            generateAssignment({Type(TypeType::INT), "-!SP"},if_node->condition);
+
+            output += "MOVE W I 0,-!SP\n";
+            output += "CMP W !SP,4+!SP\n";
+            output += "JEQ "+trueLabel+"\n";
+            generateNodes(if_node->elseBlock);
+            output += "JUMP "+continueLabel+"\n";
+            output += trueLabel+":\n";
+            generateNodes(if_node->thenBlock);
+            output += continueLabel+":\n";
+        }
+    }
+}
+
 
 string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDescr>& function_descrs, const unordered_map<string, unordered_map<string, Type>>& variables) {
     string output;

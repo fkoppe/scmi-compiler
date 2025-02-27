@@ -49,6 +49,7 @@ class Function {
         string returnLabel;
         int localVariablePointerOffset;
         int paramaterPointerOffset;
+        int jumpLabelNum;
         FunctionDescr findFunctionDescr(const string&);
         void generateFunctionCall(const shared_ptr<FunctionCallNode>&, const FunctionDescr&);
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
@@ -57,8 +58,9 @@ class Function {
         LocalVariable getLogicalExpressions(const shared_ptr<ASTNode>&, vector<LogicalExpression>&);
         void generateLogicalExpressions(const LogicalExpression&);
         void generateShift(const Type& from, const LocalVariable& to);
-
-
+        static string getCompareJump(const LogicalType);
+        string getNextJumpLabel();
+        void generateNodes(const vector<shared_ptr<ASTNode>>&);
 };
 
 #endif //COMPILER_HPP
