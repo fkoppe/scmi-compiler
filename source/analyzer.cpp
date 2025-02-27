@@ -125,7 +125,7 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
     }
     if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node)) {
         checkLogicalExpression(logical_node);
-        return expected_type;
+        return Type(TypeType::INT);
     }
     throw runtime_error("Unrecognized node type for getVariableType");
 }

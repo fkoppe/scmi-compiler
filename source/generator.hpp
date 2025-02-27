@@ -19,6 +19,7 @@ TODO:
 - recursion analyze logicalExpression tree -> write in array✅
 - figure out cmp and jump way to set comparsionNode
 - output code with array to generate logicalExpression with stack operations
+- change vector<LogicalExpression> to add function calls
 */
 
 string compile(const vector<shared_ptr<ASTNode>>&, const vector<FunctionDescr>&, const unordered_map<string, unordered_map<string, Type>>&);
@@ -29,8 +30,8 @@ struct LocalVariable {
 };
 
 struct LogicalExpression {
-    string expression_L;
-    string expression_R;
+    LocalVariable expression_L;
+    LocalVariable expression_R;
     LogicalType op;
 };
 
@@ -53,9 +54,9 @@ class Function {
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
         int addVariables(const unordered_map<string, Type>&);
         void generateOutput(const shared_ptr<FunctionCallNode>&);
-        string getLogicalExpressions(const shared_ptr<ASTNode>&, vector<LogicalExpression>&);
-
-
+        LocalVariable getLogicalExpressions(const shared_ptr<ASTNode>&, vector<LogicalExpression>&);
+        void generateLogicalExpressions(const LogicalExpression&);
+        void generateShift(const Type& from, const LocalVariable& to);
 
 
 };

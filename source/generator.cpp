@@ -131,6 +131,12 @@ void Function::generateAssignment(const LocalVariable& assign_variable, const sh
     else if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node_expression)) {
         vector<LogicalExpression> logical_expressions;
         getLogicalExpressions(logical_node, logical_expressions);
+
+        for (const LogicalExpression& logical_expression : logical_expressions) {
+            generateLogicalExpressions(logical_expression);
+        }
+        assignment = "!SP+";
+        assignType = Type(TypeType::INT);
     }
     else {
         throw runtime_error("invalid assignment AST Node");
@@ -139,7 +145,7 @@ void Function::generateAssignment(const LocalVariable& assign_variable, const sh
     output += "MOVE " + assign_variable.type.miType() + " " + assignment + "," + assign_variable.address + "\n";
 
     if (assignType.getEnum() != assign_variable.type.getEnum()) {
-        output += "SH I -"+to_string((assign_variable.type.size()-assignType.size())*8)+","+assign_variable.address+","+assign_variable.address+"\n";
+        generateShift(assignType,assign_variable);
     }
 }
 
@@ -179,23 +185,59 @@ void Function::generateOutput(const shared_ptr<FunctionCallNode>& output) {
     }
 }
 
-string Function::getLogicalExpressions(const shared_ptr<ASTNode>& node, vector<LogicalExpression>& output) {
+LocalVariable Function::getLogicalExpressions(const shared_ptr<ASTNode>& node, vector<LogicalExpression>& output) {
     if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node)) {
-        return to_string(numberNode->value);
-        //assignment = "I " + to_string(numberNode->value);
-        //assignType = assign_variable.type;
+        LocalVariable var = {Type(TypeType::INT), "I "+to_string(numberNode->value)};
+        return var;
     }
     if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node)) {
         LocalVariable local_variable = localVariableMap.at(identifier_node->name);
-        //assignment = local_variable.address;
-        //assignType = local_variable.type;
-        return identifier_node->name;
+        return local_variable;
     }
     if (const shared_ptr<LogicalNode> log = dynamic_pointer_cast<LogicalNode>(node)) {
         output.push_back({getLogicalExpressions(log->left, output), getLogicalExpressions(log->right, output), log->logicalType});
-        return "";
+        return {};
     }
     throw runtime_error("invalid logical expression AST Node");
+}
+
+void Function::generateLogicalExpressions(const LogicalExpression& logical_expression) {
+    if (logical_expression.expression_L.address != "") {
+        if (logical_expression.expression_L.type.getEnum() != TypeType::INT) {
+            output += "MOVE W I 0,-!SP\n";
+            output += "MOVE "+logical_expression.expression_L.type.miType()+" "+logical_expression.expression_L.address+",!SP\n";
+            generateShift(logical_expression.expression_L.type, {Type(TypeType::INT), "!SP"});
+        }
+        else {
+            output += "MOVE W "+logical_expression.expression_L.address+",-!SP\n";
+        }
+    }
+
+    if (logical_expression.expression_R.address != "") {
+        if (logical_expression.expression_R.type.getEnum() != TypeType::INT) {
+            output += "MOVE W I 0,-!SP\n";
+            output += "MOVE "+logical_expression.expression_R.type.miType()+" "+logical_expression.expression_R.address+",!SP\n";
+            generateShift(logical_expression.expression_R.type, {Type(TypeType::INT), "!SP"});
+        }
+        else {
+            output += "MOVE W "+logical_expression.expression_R.address+",-!SP\n";
+        }
+    }
+
+    if (logical_expression.op == LogicalType::AND) {
+        //ANDNOT s1,s2 => s2 && !s1
+        output += "MOVEC W !SP,!SP\n";
+        output += "ANDNOT W !SP,4+!SP\n";
+        output += "ADD W I 4,SP\n";
+    }
+    else if (logical_expression.op == LogicalType::OR) {
+        output += "OR W !SP,4+!SP\n";
+        output += "ADD W I 4,SP\n";
+    }
+}
+
+void Function::generateShift(const Type& from, const LocalVariable& to) {
+    output += "SH I -"+to_string((to.type.size()-from.size())*8)+","+to.address+","+to.address+"\n";
 }
 
 string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDescr>& function_descrs, const unordered_map<string, unordered_map<string, Type>>& variables) {
