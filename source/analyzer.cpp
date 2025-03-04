@@ -166,6 +166,9 @@ void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
             exit(-1);
         }
     }
+    else if (shared_ptr<ArithmeticNode> arithmetic_node = dynamic_pointer_cast<ArithmeticNode>(node)) {
+
+    }
     else {
         throw runtime_error("Unrecognized node type for checkExpression");
     }

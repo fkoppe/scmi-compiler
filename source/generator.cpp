@@ -100,21 +100,31 @@ void Function::generateAssignment(const LocalVariable& assign_variable, const sh
         assignType = function_call_type.type;
     }
     else if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node_expression)) {
-        vector<LogicalExpression> logical_expressions;
-        getLogicalExpressions(logical_node, logical_expressions);
+        vector<MathExpression> logical_expressions;
+        getMathExpression(logical_node, logical_expressions);
 
-        for (const LogicalExpression& logical_expression : logical_expressions) {
-            generateLogicalExpression(logical_expression);
+        for (const MathExpression& arithmetic_expression : logical_expressions) {
+            if (holds_alternative<LogicalType>(arithmetic_expression.op)) {
+                generateLogicalExpression(arithmetic_expression);
+            }
+            if (holds_alternative<ArithmeticType>(arithmetic_expression.op)) {
+                generateArithmeticExpression(arithmetic_expression, assign_variable.type);
+            }
         }
         assignment = "!SP+";
         assignType = Type(TypeType::INT);
     }
     else if (const shared_ptr<ArithmeticNode>& arithmetic_node = dynamic_pointer_cast<ArithmeticNode>(node_expression)) {
-        vector<ArithmeticExpression> arithmetic_expressions;
-        getArithmeticExpressions(arithmetic_node, arithmetic_expressions);
+        vector<MathExpression> arithmetic_expressions;
+        getMathExpression(arithmetic_node, arithmetic_expressions);
 
-        for (const ArithmeticExpression& arithmetic_expression : arithmetic_expressions) {
-            generateArithmeticExpression(arithmetic_expression, assign_variable.type);
+        for (const MathExpression& arithmetic_expression : arithmetic_expressions) {
+            if (holds_alternative<LogicalType>(arithmetic_expression.op)) {
+                generateLogicalExpression(arithmetic_expression);
+            }
+            if (holds_alternative<ArithmeticType>(arithmetic_expression.op)) {
+                generateArithmeticExpression(arithmetic_expression, assign_variable.type);
+            }
         }
         assignment = "!SP+";
         assignType = assign_variable.type;
@@ -166,23 +176,9 @@ void Function::generateOutput(const shared_ptr<FunctionCallNode>& output) {
     }
 }
 
-LocalVariable Function::getLogicalExpressions(const shared_ptr<ASTNode>& node, vector<LogicalExpression>& output) {
-    if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node)) {
-        LocalVariable var = {Type(TypeType::INT), "I "+to_string(numberNode->value)};
-        return var;
-    }
-    if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node)) {
-        LocalVariable local_variable = localVariableMap.at(identifier_node->name);
-        return local_variable;
-    }
-    if (const shared_ptr<LogicalNode> log = dynamic_pointer_cast<LogicalNode>(node)) {
-        output.push_back({getLogicalExpressions(log->left, output), getLogicalExpressions(log->right, output), log->logicalType});
-        return {};
-    }
-    throw runtime_error("invalid logical expression AST Node");
-}
+void Function::generateLogicalExpression(const MathExpression& logical_expression) {
+    LogicalType logType = get<LogicalType>(logical_expression.op);
 
-void Function::generateLogicalExpression(const LogicalExpression& logical_expression) {
     if (logical_expression.expression_L.address != "") {
         if (logical_expression.expression_L.type.getEnum() != TypeType::INT) {
             output += "MOVE W I 0,-!SP\n";
@@ -205,13 +201,13 @@ void Function::generateLogicalExpression(const LogicalExpression& logical_expres
         }
     }
 
-    if (logical_expression.op == LogicalType::AND) {
+    if (logType == LogicalType::AND) {
         //ANDNOT s1,s2 => s2 && !s1
         output += "MOVEC W !SP,!SP\n";
         output += "ANDNOT W !SP,4+!SP\n";
         output += "ADD W I 4,SP\n";
     }
-    else if (logical_expression.op == LogicalType::OR) {
+    else if (logType == LogicalType::OR) {
         output += "OR W !SP,4+!SP\n";
         output += "ADD W I 4,SP\n";
     }
@@ -219,18 +215,18 @@ void Function::generateLogicalExpression(const LogicalExpression& logical_expres
         output += "CMP W 4+!SP,!SP\n";
         string trueLabel = getNextJumpLabel();
         string falseLabel = getNextJumpLabel();
-        output += getCompareJump(logical_expression.op) + " " + trueLabel+"\n";
+        output += getCompareJump(logType) + " " + trueLabel+"\n";
         //false
         output += "MOVE W I 0,4+!SP\n";
-        output += "ADD W I 4,SP\n";
         output += "JUMP "+falseLabel+"\n";
 
         //true
         output += trueLabel+":\n";
         output += "MOVE W I 1,4+!SP\n";
-        output += "ADD W I 4,SP\n";
 
         output += falseLabel+":\n";
+        output += "ADD W I 4,SP\n";
+
     }
 }
 
@@ -238,7 +234,7 @@ void Function::generateShift(const Type& from, const LocalVariable& to) {
     output += "SH I -"+to_string((to.type.size()-from.size())*8)+","+to.address+","+to.address+"\n";
 }
 
-string Function::getCompareJump(const LogicalType logical) {
+string Function::getCompareJump(const LogicalType& logical) {
     switch (logical) {
         case LogicalType::EQUAL:
             return "JEQ";
@@ -308,7 +304,9 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
     }
 }
 
-void Function::generateArithmeticExpression(const ArithmeticExpression& arithmetic_expression, const Type& expected_type) {
+void Function::generateArithmeticExpression(const MathExpression& arithmetic_expression, const Type& expected_type) {
+    ArithmeticType ariType = get<ArithmeticType>(arithmetic_expression.op);
+
     LocalVariable l = arithmetic_expression.expression_L;
     LocalVariable r = arithmetic_expression.expression_R;
     if (l.address != "") {
@@ -332,7 +330,7 @@ void Function::generateArithmeticExpression(const ArithmeticExpression& arithmet
             output += "MOVE "+ expected_type.miType() + " " + r.address + ",-!SP\n";
         }
     }
-    generateArithmeticOperation(arithmetic_expression.op, expected_type);
+    generateArithmeticOperation(ariType, expected_type);
 
 }
 
@@ -382,7 +380,7 @@ void Function::generateArithmeticOperation(const ArithmeticType arithmetic, cons
     output += "ADD W I 4,SP\n";
 }
 
-LocalVariable Function::getArithmeticExpressions(const shared_ptr<ASTNode>& node, vector<ArithmeticExpression>& output) {
+LocalVariable Function::getMathExpression(const shared_ptr<ASTNode>& node, vector<MathExpression>& output) {
     if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node)) {
         LocalVariable var = {Type(TypeType::INT), "I "+to_string(numberNode->value)};
         return var;
@@ -391,11 +389,15 @@ LocalVariable Function::getArithmeticExpressions(const shared_ptr<ASTNode>& node
         LocalVariable local_variable = localVariableMap.at(identifier_node->name);
         return local_variable;
     }
-    if (const shared_ptr<ArithmeticNode> log = dynamic_pointer_cast<ArithmeticNode>(node)) {
-        output.push_back({getArithmeticExpressions(log->left, output), getArithmeticExpressions(log->right, output), log->arithmeticType});
+    if (const shared_ptr<LogicalNode> log = dynamic_pointer_cast<LogicalNode>(node)) {
+        output.push_back({getMathExpression(log->left, output), getMathExpression(log->right, output), log->logicalType});
         return {};
     }
-    throw runtime_error("invalid arithmetic expression AST Node");
+    if (const shared_ptr<ArithmeticNode> ari = dynamic_pointer_cast<ArithmeticNode>(node)) {
+        output.push_back({getMathExpression(ari->left, output), getMathExpression(ari->right, output), ari->arithmeticType});
+        return {};
+    }
+    throw runtime_error("invalid logical expression AST Node");
 }
 
 

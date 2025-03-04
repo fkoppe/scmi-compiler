@@ -116,22 +116,6 @@ public:
     }
 };
 
-class ArrayDeclarationNode : public ASTNode {
-public:
-    string identifier;
-    Type elementType;
-    int size;
-    string name;
-    vector<shared_ptr<ASTNode>> values;
-
-    ArrayDeclarationNode(string id, Type type, int s, string n, vector<shared_ptr<ASTNode>> vals)
-        : identifier(move(id)), elementType(move(type)), size(s), name(move(n)), values(move(vals)) {}
-
-    void print(int indent = 0) const override {
-        cout << string(indent, ' ') << "ArrayDeclaration(" << identifier << ")\n";
-    }
-};
-
 class ArrayAssignmentNode : public ASTNode {
 public:
     shared_ptr<IdentifierNode> arrayName;
@@ -294,5 +278,63 @@ private:
     }
 };
 
+class ArrayNode : public ASTNode {
+public:
+    Type type;
+    int32_t size;
+    vector<shared_ptr<ASTNode>> arrayValues;
+    string name;
+
+
+    ArrayNode(Type type, int32_t size, vector<shared_ptr<ASTNode>> arrayValues, string name )
+        : type(type), size(size), arrayValues(std::move(arrayValues)), name(std::move(name)) {}
+
+
+
+
+
+
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "ArrayDeclarationNode(" << type.toString() << "[] "<< name << ")\n";
+        if (arrayValues.size() > 0) {
+            for (const auto& value : arrayValues) {
+                value->print(indent + 2);
+            }
+        }
+        else {
+            cout << std::string(indent + 2, ' ') << "Empty("<< size <<")\n";
+        }
+    }
+};
+
+/*
+class ForLoopNode : public ASTNode {
+public:
+    std::string loopVariable;
+    std::shared_ptr<ASTNode> condition;
+    std::string increment; ???? => for(int i = 0; i < n)
+
+    explicit ForLoopNode(std::shared_ptr<ASTNode> expr)
+        : operand(std::move(expr)) {}
+
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "LogicalNotExpression(!)\n";
+        operand->print(indent + 2);
+    }
+};
+
+//declare local variable i
+MOVE <type> I 0,i
+loop:
+<get logical of condition => R0>
+CMP R0,I 0
+JEQ loop_end
+
+...code...
+
+ADD W I 1,i -- oder increment
+JUMP loop
+loop_end:
+*/
 
 #endif // AST_H

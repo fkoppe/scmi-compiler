@@ -1,8 +1,12 @@
 void main() {
-    int a = 2;
-    char b = 3;
-    int res = (78 * 45 + 32) % 17 ;
+    int a = 0;
 
+    if(a % 2 == 1){
+        a = 69;
+    }
+    else {
+        a = 42;
+    }
 
-    @output(res);
+    @output(a);
 }

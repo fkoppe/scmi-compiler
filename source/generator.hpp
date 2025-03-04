@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 #include "ast.h"
@@ -29,17 +30,15 @@ struct LocalVariable {
     string address;
 };
 
-struct LogicalExpression {
+using OperationUnion = variant<LogicalType, ArithmeticType>;
+
+struct MathExpression {
     LocalVariable expression_L;
     LocalVariable expression_R;
-    LogicalType op;
+    OperationUnion op;
 };
 
-struct ArithmeticExpression {
-    LocalVariable expression_L;
-    LocalVariable expression_R;
-    ArithmeticType op;
-};
+
 
 class Function {
     public:
@@ -61,15 +60,14 @@ class Function {
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
         int addVariables(const unordered_map<string, Type>&);
         void generateOutput(const shared_ptr<FunctionCallNode>&);
-        LocalVariable getLogicalExpressions(const shared_ptr<ASTNode>&, vector<LogicalExpression>&);
-        void generateLogicalExpression(const LogicalExpression&);
         void generateShift(const Type& from, const LocalVariable& to);
-        static string getCompareJump(const LogicalType);
+        static string getCompareJump(const LogicalType&);
         string getNextJumpLabel();
         void generateNodes(const vector<shared_ptr<ASTNode>>&);
-        void generateArithmeticExpression(const ArithmeticExpression&, const Type& expected_type);
+        LocalVariable getMathExpression(const shared_ptr<ASTNode>&, vector<MathExpression>&);
+        void generateLogicalExpression(const MathExpression&);
+        void generateArithmeticExpression(const MathExpression&, const Type& expected_type);
         void generateArithmeticOperation(ArithmeticType,Type);
-        LocalVariable getArithmeticExpressions(const shared_ptr<ASTNode>&, vector<ArithmeticExpression>&);
 };
 
 #endif //COMPILER_HPP

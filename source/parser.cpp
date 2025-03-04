@@ -220,6 +220,55 @@ shared_ptr<ASTNode> Parser::parseFunctionCall() {
 // Parse a statement (expression followed by a semicolon)
 shared_ptr<ASTNode> Parser::parseStatement() {
 
+    if (peek().type == TokenType::KEYWORD && peek2().type == TokenType::L_BRACK && peek3().type == TokenType::R_BRACK) {
+        if (peek().keyword != KeywordType::TYPE) throw runtime_error("Expected keyword type");
+
+        string arrayTypeName = tokens[current].raw;
+        advance();
+        advance();
+        advance();
+
+        string arrayName = tokens[current].raw;
+        expect(TokenType::IDENTIFIER, "Expected identifier in array assignment");
+
+        expect(TokenType::ASSIGN, "Expected '=' in array assignment");
+
+
+        //shared_ptr<ASTNode> arrayNode = make_shared<ArrayNode>()
+
+        vector<shared_ptr<ASTNode>> arrayValues;
+        int32_t size = -1;
+        if (peek().type == TokenType::L_BRACE) {
+            advance();
+            // Falls Argumente vorhanden sind
+            if (!match(TokenType::R_BRACE)) {
+                arrayValues.push_back(parseExpression());
+                while (match(TokenType::COMMA)) {
+                    arrayValues.push_back(parseExpression());
+                }
+                expect(TokenType::R_BRACE, "Expected closing '}'");
+            }
+        }
+        else if (peek().type == TokenType::KEYWORD) {
+            advance();
+            expect(TokenType::L_BRACK, "Expected [");
+
+            size = stoi(tokens[current].raw);
+            expect(TokenType::NUMBER, "Expected number in array assignment");
+            expect(TokenType::R_BRACK, "Expected ]");
+
+        }
+        else {
+            throw runtime_error("Expected '{' or KEYWORD in array assignment");
+        }
+        expect(TokenType::SEMICOLON, "Expected ';' after array assignment");
+        return make_shared<ArrayNode>(convertStringToType(arrayTypeName), size, arrayValues, arrayName);
+    }
+
+
+
+
+
     //plain procedure call
     if(peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_PAREN) {
         auto functionCall = parseFunctionCall();
@@ -296,18 +345,18 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         expect(TokenType::ASSIGN, "Expected '=' in assignment");
 
         /*
-        // Handle array declaration: identifier keyword [ number ] identifier = { number, number, ... };
+        // Handle array declaration: keyword identifier [ number ] = { number, number, ... };
         if (peek().type == TokenType::KEYWORD) {
-            string arrayType = tokens[current].value;
+            string arrayType = tokens[current].raw;
             advance();
 
             expect(TokenType::L_BRACK, "Expected '[' for array size declaration");
             expect(TokenType::NUMBER, "Expected array size");
-            int arraySize = stoi(tokens[current - 1].value);
+            int arraySize = stoi(tokens[current - 1].raw);
             expect(TokenType::R_BRACK, "Expected ']' after array size");
 
             expect(TokenType::IDENTIFIER, "Expected array name");
-            string arrayName = tokens[current - 1].value;
+            string arrayName = tokens[current - 1].raw;
 
             expect(TokenType::ASSIGN, "Expected '=' for array initialization");
             expect(TokenType::L_BRACE, "Expected '{' for array initialization");
@@ -320,11 +369,11 @@ shared_ptr<ASTNode> Parser::parseStatement() {
             expect(TokenType::R_BRACE, "Expected '}' to close array initialization");
             expect(TokenType::SEMICOLON, "Expected ';' after array declaration");
 
-            return make_shared<ArrayDeclarationNode>(identifier, arrayType, arraySize, arrayName, arrayValues);
+            return make_shared<ArrayDeclarationNode>(identifier, convertStringToType(arrayType), arraySize, arrayName, arrayValues);
         }
+        */
 
-
-
+        /*
         // Handle assignment: identifier [ number ] = number ;
         if (match(TokenType::L_BRACK)) {
             auto index = parseExpression();
