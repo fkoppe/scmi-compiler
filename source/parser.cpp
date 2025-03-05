@@ -220,7 +220,6 @@ shared_ptr<ASTNode> Parser::parseFunctionCall() {
 // Parse a statement (expression followed by a semicolon)
 shared_ptr<ASTNode> Parser::parseStatement() {
 
-
     if (peek().type == TokenType::KEYWORD && peek2().type == TokenType::L_BRACK && peek3().type == TokenType::R_BRACK) {
         auto arrDec = parseArrayDeclaration();
         expect(TokenType::SEMICOLON, "Expected ';' after array assignment");
@@ -364,6 +363,13 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         advance();
         string name = tokens[current - 1].raw;
 
+        if(peek().type == TokenType::LABEL) {
+            expect(TokenType::LABEL, "Expected label after 'goto'");
+            string label = tokens[current - 1].raw;
+            expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
+            return make_shared<GotoNode>(label);
+        }
+
         if(peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER || peek().type == TokenType::L_PAREN) {
             if(peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_PAREN) {
                 auto st = parseStatement();
@@ -380,6 +386,12 @@ shared_ptr<ASTNode> Parser::parseStatement() {
             expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
             return make_shared<ReturnNode>();
         }
+    }
+
+    if(peek().type == TokenType::LABEL) {
+        string label = tokens[current].raw;
+        advance();
+        return make_shared<LabelNode>(label);
     }
 
     cerr << "Parse Error: Unexpected statement: " << peek().getTypeName() << " '" << peek().raw << "' " << peek().where() << "\n";

@@ -2,6 +2,7 @@
 #define REWRITER_H
 
 #include "ast.h"
+#include <iostream>
 
 class Rewriter {
 public:
@@ -17,20 +18,23 @@ public:
             return optimizeLogical(logical);
         } else if (auto ifNode = dynamic_pointer_cast<IfNode>(node)) {
             return optimizeIf(ifNode);
-        } else if (auto retVal = dynamic_pointer_cast<ReturnValueNode>(node)) {
-            return optimizeReturnValue(retVal);
+        } else if (auto funcCall = dynamic_pointer_cast<FunctionCallNode>(node)) {
+            return optimizeFunctionCall(funcCall);
+        } else if (auto funcDef = dynamic_pointer_cast<FunctionDefinitionNode>(node)) {
+            return optimizeFunctionDefinition(funcDef);
         }
         return node;
     }
 
 private:
     std::shared_ptr<ASTNode> optimizeAssignment(std::shared_ptr<AssignmentNode> node) {
+        node->expression = optimize(node->expression);
         if (auto id = dynamic_pointer_cast<IdentifierNode>(node->expression)) {
             if (id->name == node->variable->name) {
-                return nullptr; // Remove self-assignment
+                std::cout << "Removed self-assignment\n";
+                return nullptr;
             }
         }
-        node->expression = optimize(node->expression);
         return node;
     }
 
@@ -48,6 +52,7 @@ private:
                 case ArithmeticType::DIVIDE: if (rightNum->value != 0) result = leftNum->value / rightNum->value; break;
                 case ArithmeticType::MODULO: if (rightNum->value != 0) result = leftNum->value % rightNum->value; break;
                 }
+                std::cout << "Removed comptime arithmetic\n";
                 return std::make_shared<NumberNode>(result);
             }
         }
@@ -71,6 +76,7 @@ private:
                 case LogicalType::LESS_EQUAL: result = leftNum->value <= rightNum->value; break;
                 case LogicalType::GREATER_EQUAL: result = leftNum->value >= rightNum->value; break;
                 }
+                std::cout << "Removed comptime logic\n";
                 return std::make_shared<NumberNode>(result ? 1 : 0);
             }
         }
@@ -81,23 +87,19 @@ private:
         node->condition = optimize(node->condition);
         for (auto &stmt : node->thenBlock) stmt = optimize(stmt);
         for (auto &stmt : node->elseBlock) stmt = optimize(stmt);
+        return node;
+    }
 
-        if (auto condNum = dynamic_pointer_cast<NumberNode>(node->condition)) {
-            //if (condNum->value) {
-            //    return std::make_shared<ASTNode>(node->thenBlock);
-            //} else {
-            //    return std::make_shared<ASTNode>(node->elseBlock);
-            //}
+    std::shared_ptr<ASTNode> optimizeFunctionCall(std::shared_ptr<FunctionCallNode> node) {
+        for (auto &arg : node->arguments) {
+            arg = optimize(arg);
         }
         return node;
     }
 
-    std::shared_ptr<ASTNode> optimizeReturnValue(std::shared_ptr<ReturnValueNode> node) {
-        node->value = optimize(node->value);
-        if (auto num = dynamic_pointer_cast<NumberNode>(node->value)) {
-            if (num->value == 0) {
-                return std::make_shared<ReturnNode>(); // Remove redundant return 0
-            }
+    std::shared_ptr<ASTNode> optimizeFunctionDefinition(std::shared_ptr<FunctionDefinitionNode> node) {
+        for (auto &stmt : node->body) {
+            stmt = optimize(stmt);
         }
         return node;
     }

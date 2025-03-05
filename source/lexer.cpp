@@ -171,6 +171,10 @@ TokenType getToken(const string& word) {
         return TokenType::IDENTIFIER;
     }
 
+    if(word[0] == '#') {
+        return TokenType::LABEL;
+    }
+
     if(isdigit(word[0])) {
         bool hex = false;
 

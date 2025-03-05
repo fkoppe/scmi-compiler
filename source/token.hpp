@@ -36,6 +36,7 @@ const unordered_set<string> KEYWORD_SET = {
     "else",
     "while",
     "for",
+    "goto",
 };
 
 enum class KeywordType {
@@ -76,6 +77,7 @@ enum class TokenType {
     DIV,
     MOD,
     END_OF_FILE,
+    LABEL,
 };
 
 TypeType toTypeType(string name);

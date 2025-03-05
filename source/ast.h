@@ -305,34 +305,61 @@ public:
     }
 };
 
-/*
-class ForLoopNode : public ASTNode {
+// AST Node for Goto Statement
+class GotoNode : public ASTNode {
 public:
-    std::string loopVariable;
-    std::shared_ptr<ASTNode> condition;
-    std::string increment; ???? => for(int i = 0; i < n)
-
-    explicit ForLoopNode(std::shared_ptr<ASTNode> expr)
-        : operand(std::move(expr)) {}
-
+    std::string label;
+    explicit GotoNode(std::string lbl) : label(std::move(lbl)) {}
     void print(int indent = 0) const override {
-        std::cout << std::string(indent, ' ') << "LogicalNotExpression(!)\n";
-        operand->print(indent + 2);
+        std::cout << std::string(indent, ' ') << "Goto(" << label << ")\n";
     }
 };
 
-//declare local variable i
-MOVE <type> I 0,i
-loop:
-<get logical of condition => R0>
-CMP R0,I 0
-JEQ loop_end
+class LabelNode : public ASTNode {
+public:
+    std::string label;
 
-...code...
+    explicit LabelNode(std::string lbl) : label(std::move(lbl)) {}
 
-ADD W I 1,i -- oder increment
-JUMP loop
-loop_end:
-*/
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "Label(" << label << ")\n";
+    }
+};
+
+// AST Node for While Loop
+class WhileNode : public ASTNode {
+public:
+    std::shared_ptr<ASTNode> condition;
+    std::vector<std::shared_ptr<ASTNode>> body;
+    WhileNode(std::shared_ptr<ASTNode> cond, std::vector<std::shared_ptr<ASTNode>> b)
+        : condition(std::move(cond)), body(std::move(b)) {}
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "WhileLoop\n";
+        condition->print(indent + 2);
+        for (const auto &stmt : body) {
+            stmt->print(indent + 2);
+        }
+    }
+};
+
+// AST Node for For Loop
+class ForNode : public ASTNode {
+public:
+    std::shared_ptr<ASTNode> init;
+    std::shared_ptr<ASTNode> condition;
+    std::shared_ptr<ASTNode> update;
+    std::vector<std::shared_ptr<ASTNode>> body;
+    ForNode(std::shared_ptr<ASTNode> i, std::shared_ptr<ASTNode> cond, std::shared_ptr<ASTNode> upd, std::vector<std::shared_ptr<ASTNode>> b)
+        : init(std::move(i)), condition(std::move(cond)), update(std::move(upd)), body(std::move(b)) {}
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "ForLoop\n";
+        init->print(indent + 2);
+        condition->print(indent + 2);
+        update->print(indent + 2);
+        for (const auto &stmt : body) {
+            stmt->print(indent + 2);
+        }
+    }
+};
 
 #endif // AST_H
