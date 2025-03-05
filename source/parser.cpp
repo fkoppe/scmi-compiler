@@ -234,7 +234,6 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         expect(TokenType::ASSIGN, "Expected '=' in array assignment");
 
 
-        //shared_ptr<ASTNode> arrayNode = make_shared<ArrayNode>()
 
         vector<shared_ptr<ASTNode>> arrayValues;
         int32_t size = -1;
@@ -262,7 +261,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
             throw runtime_error("Expected '{' or KEYWORD in array assignment");
         }
         expect(TokenType::SEMICOLON, "Expected ';' after array assignment");
-        return make_shared<ArrayNode>(convertStringToType(arrayTypeName), size, arrayValues, arrayName);
+        return make_shared<ArrayDeclarationNode>(convertStringToType(arrayTypeName+"[]"), size, arrayValues, arrayName);
     }
 
 

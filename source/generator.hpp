@@ -18,12 +18,14 @@ using namespace std;
 /*
 TODO:
 - recursion analyze logicalExpression tree -> write in array✅
-- figure out cmp and jump way to set comparsionNode
-- output code with array to generate logicalExpression with stack operations
-- change vector<LogicalExpression> to add function calls
+- figure out cmp and jump way to set comparsionNode✅
+- output code with array to generate logicalExpression with stack operations✅
+- change vector<LogicalExpression> to add function calls✅
 */
 
 string compile(const vector<shared_ptr<ASTNode>>&, const vector<FunctionDescr>&, const unordered_map<string, unordered_map<string, Type>>&);
+static void generateMallocFunction();
+
 
 struct LocalVariable {
     Type type;
@@ -55,6 +57,7 @@ class Function {
         int localVariablePointerOffset;
         int paramaterPointerOffset;
         int jumpLabelNum;
+        int registerNum;
         FunctionDescr findFunctionDescr(const string&);
         void generateFunctionCall(const shared_ptr<FunctionCallNode>&, const FunctionDescr&);
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
@@ -68,6 +71,10 @@ class Function {
         void generateLogicalExpression(const MathExpression&);
         void generateArithmeticExpression(const MathExpression&, const Type& expected_type);
         void generateArithmeticOperation(ArithmeticType,Type);
+        void malloc(int size, const string& assignment);
+        void generateArrayIndexAssignment(const LocalVariable& array, int index);
+        string getNextRegister();
+        void clearRegisterNum();
 };
 
 #endif //COMPILER_HPP

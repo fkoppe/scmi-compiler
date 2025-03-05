@@ -329,6 +329,23 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
             checkNode(x, false);
         }
     }
+    else if (const shared_ptr<ArrayDeclarationNode> array = dynamic_pointer_cast<ArrayDeclarationNode>(node)) {
+        checkDeclaration(make_shared<VariableDeclarationNode>(VariableDeclarationNode(array->type, array->name, nullptr)));
+
+        Type arrayVarType = convertArrayToVarType(array->type);
+
+        if (array->size == 0 || array->arrayValues.size() == 0) {
+            cout << "Array '" << array->name << "' is empty" << endl;
+            exit(-1);
+        }
+
+        for (auto x: array->arrayValues) {
+            if (getVariableType(x, arrayVarType).getEnum() != arrayVarType.getEnum()) {
+                cout << "invalid Number Type for Array declaration" << endl;
+                exit(-1);
+            }
+        }
+    }
 }
 
 void checkForbiddenIdentifier(const string& name) {

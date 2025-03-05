@@ -1,12 +1,7 @@
 void main() {
-    int a = 0;
+    int[] arr = {1,2,test()};
+}
 
-    if(a % 2 == 1){
-        a = 69;
-    }
-    else {
-        a = 42;
-    }
-
-    @output(a);
+int test(){
+    return 1;
 }

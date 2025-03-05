@@ -278,7 +278,7 @@ private:
     }
 };
 
-class ArrayNode : public ASTNode {
+class ArrayDeclarationNode : public ASTNode {
 public:
     Type type;
     int32_t size;
@@ -286,16 +286,11 @@ public:
     string name;
 
 
-    ArrayNode(Type type, int32_t size, vector<shared_ptr<ASTNode>> arrayValues, string name )
+    ArrayDeclarationNode(Type type, int32_t size, vector<shared_ptr<ASTNode>> arrayValues, string name )
         : type(type), size(size), arrayValues(std::move(arrayValues)), name(std::move(name)) {}
 
-
-
-
-
-
     void print(int indent = 0) const override {
-        std::cout << std::string(indent, ' ') << "ArrayDeclarationNode(" << type.toString() << "[] "<< name << ")\n";
+        std::cout << std::string(indent, ' ') << "ArrayDeclarationNode(" << type.toString() << " "<< name << ")\n";
         if (arrayValues.size() > 0) {
             for (const auto& value : arrayValues) {
                 value->print(indent + 2);

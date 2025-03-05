@@ -16,6 +16,7 @@ Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const
     this->localVariablePointerOffset = 0;
     this->paramaterPointerOffset = 0;
     this->jumpLabelNum = 0;
+    this->registerNum = 0;
 
 
     output += functionName + ":\n";
@@ -95,8 +96,10 @@ void Function::generateAssignment(const LocalVariable& assign_variable, const sh
     else if (const shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(node_expression)) {
         FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
         generateFunctionCall(function_call_node, function_call_type);
-        output += "MOVE " + function_call_type.type.miType() + " !SP+,R0\n";
-        assignment = "R0";
+        string outputRegister = getNextRegister();
+
+        output += "MOVE " + function_call_type.type.miType() + " !SP+,"+outputRegister+"\n";
+        assignment = outputRegister;
         assignType = function_call_type.type;
     }
     else if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node_expression)) {
@@ -226,7 +229,6 @@ void Function::generateLogicalExpression(const MathExpression& logical_expressio
 
         output += falseLabel+":\n";
         output += "ADD W I 4,SP\n";
-
     }
 }
 
@@ -300,6 +302,28 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
             output += trueLabel+":\n";
             generateNodes(if_node->thenBlock);
             output += continueLabel+":\n";
+        }
+        else if (const shared_ptr<ArrayDeclarationNode> arr = dynamic_pointer_cast<ArrayDeclarationNode>(bodyElement)) {
+            LocalVariable local_variable = localVariableMap.at(arr->name);
+            Type arrayElementType = convertArrayToVarType(arr->type);
+            int elementSize = 0;
+            if (arr->size == -1) {
+                elementSize = arr->arrayValues.size();
+            }
+            else {
+                elementSize = arr->size;
+            }
+            int arraySize = elementSize * arrayElementType.size();
+            malloc(arraySize, local_variable.address);
+
+            if (arr->size == -1) {
+                //fill values
+                for (int i = 0; i < arr->arrayValues.size(); i++) {
+                    generateArrayIndexAssignment(local_variable, i);
+                    generateAssignment({arrayElementType,"!R0"}, arr->arrayValues.at(i));
+                    clearRegisterNum();
+                }
+            }
         }
     }
 }
@@ -380,6 +404,41 @@ void Function::generateArithmeticOperation(const ArithmeticType arithmetic, cons
     output += "ADD W I 4,SP\n";
 }
 
+static void generateMallocFunction(string& output) {
+    output += "__malloc__:\n";
+    output += "MOVE W HP,8+!SP\n";
+    output += "ADD W 4+!SP,HP\n";
+    output += "RET\n";
+}
+
+void Function::malloc(int size, const string& assignment) {
+    output += "MOVE W I 0,-!SP\n";
+    output += "MOVE W I "+ to_string(size) + ",-!SP\n";
+    output += "CALL __malloc__\n";
+    output += "ADD W I 4, SP\n";
+    output += "MOVE W !SP+,"+assignment+"\n";
+}
+
+void Function::generateArrayIndexAssignment(const LocalVariable& array, const int index) {
+    string outputRegister = getNextRegister();
+    output += "MOVE W "+array.address + ","+outputRegister+"\n";
+    output += "ADD W I "+to_string(index*convertArrayToVarType(array.type).size())+","+outputRegister+"\n";
+}
+
+string Function::getNextRegister() {
+    string output = "R"+to_string(registerNum);
+    registerNum++;
+    if (registerNum > 12) {
+        cout << "register overflow" << endl;
+        exit(-1);
+    }
+    return output;
+}
+
+void Function::clearRegisterNum() {
+    registerNum = 0;
+}
+
 LocalVariable Function::getMathExpression(const shared_ptr<ASTNode>& node, vector<MathExpression>& output) {
     if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node)) {
         LocalVariable var = {Type(TypeType::INT), "I "+to_string(numberNode->value)};
@@ -400,13 +459,12 @@ LocalVariable Function::getMathExpression(const shared_ptr<ASTNode>& node, vecto
     throw runtime_error("invalid logical expression AST Node");
 }
 
-
-
-
 string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDescr>& function_descrs, const unordered_map<string, unordered_map<string, Type>>& variables) {
     string output;
     output += "SEG\n";
     output += "MOVE W I H'00FFFF',SP\n";
+    output += "MOVEA heap,HP\n";
+    output += "ADD W I 4,HP\n";
     output += "CALL main\n";
     output += "HALT\n";
     for (int i = 0; i < ast.size(); i++) {
@@ -414,6 +472,9 @@ string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDesc
         Function function = Function(func, variables.at(func->functionName), function_descrs);
         output += function.getOutput();
     }
+    generateMallocFunction(output);
+    output += "HP: DD W 0\n";
+    output += "heap: DD W 0\n";
     output += "END";
     return output;
 }
