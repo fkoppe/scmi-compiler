@@ -35,6 +35,7 @@ public:
     shared_ptr<ASTNode> parsePrimaryExpression();
     shared_ptr<ASTNode> parseFunctionCall();
     shared_ptr<ASTNode> parseStatement();
+    shared_ptr<ASTNode> parseArrayDeclaration();
 
     vector<shared_ptr<ASTNode>> parse(); // Neuer Haupt-Parser
 };

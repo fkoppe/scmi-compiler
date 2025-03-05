@@ -464,7 +464,6 @@ string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDesc
     output += "SEG\n";
     output += "MOVE W I H'00FFFF',SP\n";
     output += "MOVEA heap,HP\n";
-    output += "ADD W I 4,HP\n";
     output += "CALL main\n";
     output += "HALT\n";
     for (int i = 0; i < ast.size(); i++) {

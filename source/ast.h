@@ -32,8 +32,11 @@ public:
 class IdentifierNode : public ASTNode {
 public:
     string name;
+    int index;
 
-    explicit IdentifierNode(string n) : name(move(n)) {}
+    explicit IdentifierNode(string n) : name(move(n)), index(-1) {}
+    explicit IdentifierNode(string n, int index) : name(move(n)), index(index) {}
+
 
     void print(int indent = 0) const override {
         cout << string(indent, ' ') << "Identifier(" << name << ")\n";
@@ -116,13 +119,13 @@ public:
     }
 };
 
-class ArrayAssignmentNode : public ASTNode {
+class ArrayIndexElementNode : public ASTNode {
 public:
     shared_ptr<IdentifierNode> arrayName;
     shared_ptr<ASTNode> index;
     shared_ptr<ASTNode> value;
 
-    ArrayAssignmentNode(shared_ptr<IdentifierNode> name, shared_ptr<ASTNode> idx, shared_ptr<ASTNode> val)
+    ArrayIndexElementNode(shared_ptr<IdentifierNode> name, shared_ptr<ASTNode> idx, shared_ptr<ASTNode> val)
         : arrayName(move(name)), index(move(idx)), value(move(val)) {}
 
     void print(int indent = 0) const override {
