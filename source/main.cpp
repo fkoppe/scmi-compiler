@@ -6,13 +6,14 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "analyzer.hpp"
+#include "rewriter.hpp"
 
 int main() {
     //auto tokens = lexString(readFile("../code.sc"));
 
     Lexer lexer;
     //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return; if(a) { b = 0; }  }");
-    vector<Token> tokens = lexer.lexText(readFile("../code.sc"));
+    vector<Token> tokens = lexer.lexText(readFile("../../code.sc"));
 
 
     cout << "\n=== LEXER Output ===\n";
@@ -38,6 +39,16 @@ int main() {
 
         cout << "Semantic analysis successful!\n";
         std::cout << "=================================\n";
+
+
+        std::cout << "\n=== Running Rewriter ===\n";
+
+        Rewriter rewriter;
+        for(auto root : ast) {
+            rewriter.optimize(root);
+        }
+
+        std::cout << "==========================\n";
 
 
         cout << "\n=== COMPILE Output ===\n";
