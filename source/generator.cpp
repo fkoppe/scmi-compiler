@@ -339,6 +339,12 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
                 }
             }
         }
+        else if (const shared_ptr<LabelNode> label_node = dynamic_pointer_cast<LabelNode>(bodyElement)) {
+            output += "__"+label_node->label+":\n";
+        }
+        else if (const shared_ptr<GotoNode> goto_node = dynamic_pointer_cast<GotoNode>(bodyElement)) {
+            output += "JUMP __"+goto_node->label+"\n";
+        }
     }
 }
 

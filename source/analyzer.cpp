@@ -8,6 +8,7 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
     unordered_map<string, unordered_map<string,Type>> mapVariableList;
 
     vector<shared_ptr<FunctionDefinitionNode>> functions;
+    unordered_set<string> labelNames;
 
     for (const shared_ptr<ASTNode>& ast : nodes) {
         if (const shared_ptr<FunctionDefinitionNode> func = dynamic_pointer_cast<FunctionDefinitionNode>(ast)) {
@@ -18,6 +19,22 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
                 paramVariables.push_back({p.second, {p.first}});
             }
             function_descrs.push_back({func->functionName, {func->returnType}, paramVariables});
+
+            for (const auto& x: func->body) {
+                if (auto e = dynamic_pointer_cast<LabelNode>(x)) {
+                    string labelName = e->label;
+
+                    if (labelNames.count(labelName)) {
+                        cout << "Label " << labelName << " already exists" << endl;
+                        exit(-1);
+                    }
+
+                    checkGotoLabelName(labelName);
+
+                    labelNames.insert(labelName);
+                }
+            }
+
         }
         else {
             cout << "Function declaration in AST Node not found" << endl;
@@ -28,7 +45,7 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
     checkFunctionNames(function_descrs);
 
     for (shared_ptr<FunctionDefinitionNode> &node : functions) {
-        SemanticAnalyzer analyzer = SemanticAnalyzer(node, function_descrs);
+        SemanticAnalyzer analyzer = SemanticAnalyzer(node, function_descrs, labelNames);
         mapVariableList.insert_or_assign(analyzer.getName(),analyzer.getVariableList());
     }
 
@@ -53,11 +70,12 @@ void checkFunctionNames(const vector<FunctionDescr>& function_descrs) {
     }
 }
 
-SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<FunctionDescr>& function_descrs) {
+SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<FunctionDescr>& function_descrs, const unordered_set<string>& labelNames) {
     name = function_node->functionName;
     this->function_descrs = function_descrs;
     this->function_node = function_node;
     this->checkReturn = false;
+    this->labelNames = labelNames;
 
     checkParams();
 
@@ -183,9 +201,16 @@ void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
     }
 }
 
-void SemanticAnalyzer::checkIndex(int index) {
+void SemanticAnalyzer::checkIndex(const int index) {
     if (index < 0) {
         cout << "Invalid index: " << index << endl;
+        exit(-1);
+    }
+}
+
+void checkGotoLabelName(const string &name) {
+    if (name[0] == '_' && name[1] == '_' && name[name.length()-1] == '_' && name[name.length()-2] == '_') {
+        cout << "Invalid label name: " << name << endl;
         exit(-1);
     }
 }
@@ -359,6 +384,12 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
                 cout << "invalid Number Type for Array declaration" << endl;
                 exit(-1);
             }
+        }
+    }
+    else if (const shared_ptr<GotoNode> goto_node = dynamic_pointer_cast<GotoNode>(node)) {
+        if (!this->labelNames.count(goto_node->label)) {
+            cout << "Goto '" << goto_node->label << "' does not exist" << endl;
+            exit(-1);
         }
     }
 }
