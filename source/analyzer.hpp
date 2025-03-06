@@ -7,15 +7,6 @@
 #include <limits>
 #include <unordered_set>
 
-/*
-TODO:
-- Move small type to big type ✅
-- If statement:
--   condition ✅
--   then/else normal überprüfen + keine declearations ✅
-- rework getVariableType✅
-- check return✅
-*/
 
 
 using namespace std;
@@ -26,6 +17,7 @@ const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
 
 const unordered_set<string> FORBIDDEN_SUBSTRING = {"__return__"};
 const string OUTPUT_FUNCTION = "@output";
+const string LENGTH_FUNCTION = "@length";
 
 struct FunctionDescr {
     string name;

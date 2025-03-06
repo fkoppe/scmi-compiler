@@ -180,7 +180,8 @@ enum class LogicalType {
     LESS_THAN,      // <
     GREATER_THAN,   // >
     LESS_EQUAL,     // <=
-    GREATER_EQUAL   // >=
+    GREATER_EQUAL,   // >=
+    NOT
 };
 
 // AST Node for logical expressions (x && y, a || b)

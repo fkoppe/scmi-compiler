@@ -89,6 +89,10 @@ public:
     TypeType getEnum() const {
         return key;
     }
+
+    bool isArray() const {
+        return key == TypeType::INTARRAY || key == TypeType::SHORTARRAY || key == TypeType::CHARARRAY || key == TypeType::FLOATARRAY || key == TypeType::DOUBLEARRAY;
+    }
 };
 
 

@@ -24,7 +24,7 @@ TODO:
 */
 
 string compile(const vector<shared_ptr<ASTNode>>&, const vector<FunctionDescr>&, const unordered_map<string, unordered_map<string, Type>>&);
-static void generateMallocFunction();
+static void generateMallocFunction(string&);
 
 
 struct LocalVariable {
@@ -58,6 +58,7 @@ class Function {
         int paramaterPointerOffset;
         int jumpLabelNum;
         int registerNum;
+        const int ARRAY_DESCRIPTOR_SIZE = 4;
 
         void generateNodes(const vector<shared_ptr<ASTNode>>&);
         FunctionDescr findFunctionDescr(const string&);
@@ -65,7 +66,7 @@ class Function {
         void generateAssignment(const LocalVariable& assign_variable, int index, const shared_ptr<ASTNode>& node_expression);
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
         int addVariables(const unordered_map<string, Type>&);
-        void generateOutput(const shared_ptr<FunctionCallNode>&);
+        void generateOutputFunction(const shared_ptr<FunctionCallNode>&);
         void generateShift(const Type& from, const LocalVariable& to);
         static string getCompareJump(const LogicalType&);
         string getNextJumpLabel();
@@ -74,11 +75,12 @@ class Function {
         void generateArithmeticExpression(const MathExpression&, const Type& expected_type);
         void generateArithmeticOperation(ArithmeticType,Type);
         void malloc(int size, const string& assignment);
-        void generateArrayIndexAssignment(const LocalVariable& array, int index);
+        string generateArrayIndex(const LocalVariable& local_variable, int index);
+
         string getNextRegister();
         void clearRegisterNum();
-        string generateArrayIndex(const LocalVariable& local_variable, int index);
         string getVariableAddress(const LocalVariable& local_variable, int index);
+        void generateMathExpression(const shared_ptr<ASTNode>&, Type);
 };
 
 #endif //COMPILER_HPP
