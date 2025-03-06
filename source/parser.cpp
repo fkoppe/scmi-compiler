@@ -360,14 +360,20 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 
     //return, goto, continue, break
     if (peek().type == TokenType::KEYWORD) {
+        auto keywordType = peek().keyword;
         advance();
         string name = tokens[current - 1].raw;
 
         if(peek().type == TokenType::LABEL) {
             expect(TokenType::LABEL, "Expected label after 'goto'");
-            string label = tokens[current - 1].raw;
+            string label = tokens[current - 1].raw.erase(0, 1);
             expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
             return make_shared<GotoNode>(label);
+        }
+
+        if(keywordType != KeywordType::RETURN) {
+            cerr << "Parse Error: Unexpected keyword: " <<  tokens[current - 1].getTypeName() << " '" << tokens[current - 1].raw << "' " <<  tokens[current - 1].where() << "\n";
+            exit(1);
         }
 
         if(peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER || peek().type == TokenType::L_PAREN) {
@@ -389,7 +395,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
     }
 
     if(peek().type == TokenType::LABEL) {
-        string label = tokens[current].raw;
+        string label = tokens[current].raw.erase(0, 1);;
         advance();
         return make_shared<LabelNode>(label);
     }
