@@ -115,6 +115,12 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
     if (shared_ptr<IdentifierNode> ident = dynamic_pointer_cast<IdentifierNode>(node)){
         checkIdentifier(ident);
         Type foundType = findVariable(ident->name);
+
+        if (ident->index != -1) {
+            checkIndex(ident->index);
+            foundType = convertArrayToVarType(foundType);
+        }
+
         return getCastType(foundType, expected_type);
     }
     if (shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)){
@@ -147,6 +153,9 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
 void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
     if (shared_ptr<IdentifierNode> ident = dynamic_pointer_cast<IdentifierNode>(node)){
         checkIdentifier(ident);
+        if (ident->index != -1) {
+            checkIndex(ident->index);
+        }
     }
     else if (shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)){
         FunctionDescr call_func = checkFunctionCall(function_call);
@@ -171,6 +180,13 @@ void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
     }
     else {
         throw runtime_error("Unrecognized node type for checkExpression");
+    }
+}
+
+void SemanticAnalyzer::checkIndex(int index) {
+    if (index < 0) {
+        cout << "Invalid index: " << index << endl;
+        exit(-1);
     }
 }
 
@@ -255,11 +271,10 @@ void SemanticAnalyzer::checkIdentifier(const shared_ptr<IdentifierNode>& identif
 void SemanticAnalyzer::checkAssignment(const shared_ptr<AssignmentNode>& ass) {
     checkIdentifier(ass->variable);
 
-    Type definition = findVariable(ass->variable->name);
+    Type definition = convertArrayToVarType(findVariable(ass->variable->name));
     Type input = getVariableType(ass->expression, definition);
     checkIdentifierType(ass->variable->name, definition, "<assignment>", input);
 }
-
 
 void SemanticAnalyzer::checkParams() {
     FunctionDescr ownDescr;
@@ -334,7 +349,7 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
 
         Type arrayVarType = convertArrayToVarType(array->type);
 
-        if (array->size == 0 || array->arrayValues.size() == 0) {
+        if (array->size == 0 && array->arrayValues.size() == 0) {
             cout << "Array '" << array->name << "' is empty" << endl;
             exit(-1);
         }

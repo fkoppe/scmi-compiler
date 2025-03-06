@@ -60,6 +60,7 @@ class Function {
         int registerNum;
         FunctionDescr findFunctionDescr(const string&);
         void generateFunctionCall(const shared_ptr<FunctionCallNode>&, const FunctionDescr&);
+        void generateAssignment(const LocalVariable& assign_variable, int index, const shared_ptr<ASTNode>& node_expression);
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
         int addVariables(const unordered_map<string, Type>&);
         void generateOutput(const shared_ptr<FunctionCallNode>&);
@@ -75,6 +76,8 @@ class Function {
         void generateArrayIndexAssignment(const LocalVariable& array, int index);
         string getNextRegister();
         void clearRegisterNum();
+        string generateArrayIndex(const LocalVariable& local_variable, int index);
+        string getVariableAddress(const LocalVariable& local_variable, int index);
 };
 
 #endif //COMPILER_HPP

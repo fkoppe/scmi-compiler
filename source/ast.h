@@ -28,7 +28,7 @@ public:
     }
 };
 
-// AST-Knoten für Variablen (Identifier)
+// AST-Knoten für Variablen (Identifier), wenn size != -1 dann Array Indizierung
 class IdentifierNode : public ASTNode {
 public:
     string name;
@@ -39,7 +39,12 @@ public:
 
 
     void print(int indent = 0) const override {
-        cout << string(indent, ' ') << "Identifier(" << name << ")\n";
+        if (index == -1) {
+            cout << string(indent, ' ') << "Identifier(" << name << ")\n";
+        }
+        else {
+            cout << string(indent, ' ') << "Identifier(" << name<<"["<<index << "])\n";
+        }
     }
 };
 
@@ -116,25 +121,6 @@ public:
         for (const auto& stmt : body) {
             stmt->print(indent + 2);
         }
-    }
-};
-
-class ArrayIndexElementNode : public ASTNode {
-public:
-    shared_ptr<IdentifierNode> arrayName;
-    shared_ptr<ASTNode> index;
-    shared_ptr<ASTNode> value;
-
-    ArrayIndexElementNode(shared_ptr<IdentifierNode> name, shared_ptr<ASTNode> idx, shared_ptr<ASTNode> val)
-        : arrayName(move(name)), index(move(idx)), value(move(val)) {}
-
-    void print(int indent = 0) const override {
-        cout << string(indent, ' ') << "ArrayAssignment:\n";
-        cout << string(indent + 2, ' ') << "Array: " << arrayName->name << "\n";
-        cout << string(indent + 2, ' ') << "Index:\n";
-        index->print(indent + 4);
-        cout << string(indent + 2, ' ') << "Value:\n";
-        value->print(indent + 4);
     }
 };
 

@@ -75,6 +75,7 @@ private:
     void checkLogicalExpression(const shared_ptr<ASTNode>&);
     void checkNode(const shared_ptr<ASTNode>&, bool);
     void checkExpression(const shared_ptr<ASTNode>&);
+    void checkIndex(int index);
 
 };
 

@@ -80,7 +80,8 @@ void Function::generateFunctionCall(const shared_ptr<FunctionCallNode>& function
     }
 }
 
-void Function::generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression) {
+//index for array index
+void Function::generateAssignment(const LocalVariable& assign_variable, int assign_variable_index, const shared_ptr<ASTNode>& node_expression) {
     string assignment;
     Type assignType;
 
@@ -90,8 +91,15 @@ void Function::generateAssignment(const LocalVariable& assign_variable, const sh
     }
     else if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node_expression)) {
         LocalVariable local_variable = localVariableMap.at(identifier_node->name);
-        assignment = local_variable.address;
-        assignType = local_variable.type;
+
+        if (identifier_node->index == -1) {
+            assignment = local_variable.address;
+            assignType = local_variable.type;
+        }
+        else {
+            assignment = generateArrayIndex(local_variable, identifier_node->index);
+            assignType = convertArrayToVarType(local_variable.type);
+        }
     }
     else if (const shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(node_expression)) {
         FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
@@ -136,11 +144,17 @@ void Function::generateAssignment(const LocalVariable& assign_variable, const sh
         throw runtime_error("invalid assignment AST Node");
     }
 
-    output += "MOVE " + assign_variable.type.miType() + " " + assignment + "," + assign_variable.address + "\n";
+    output += "MOVE " + assign_variable.type.miType() + " " + assignment + "," + getVariableAddress(assign_variable, assign_variable_index) + "\n";
 
-    if (assignType.getEnum() != assign_variable.type.getEnum()) {
+    if (convertArrayToVarType(assignType).getEnum() != convertArrayToVarType(assign_variable.type).getEnum()) {
         generateShift(assignType,assign_variable);
     }
+
+    clearRegisterNum();
+}
+
+void Function::generateAssignment(const LocalVariable &assign_variable, const shared_ptr<ASTNode> &node_expression) {
+    generateAssignment(assign_variable,-1,node_expression);
 }
 
 int Function::addVariables(const unordered_map<string, Type>& variables) {
@@ -267,7 +281,7 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
             generateAssignment(localVariableMap.at(variable_declaration_node->varName), variable_declaration_node->value);
         }
         else if (shared_ptr<AssignmentNode> assignment_node = dynamic_pointer_cast<AssignmentNode>(bodyElement)) {
-            generateAssignment(localVariableMap.at(assignment_node->variable->name), assignment_node->expression);
+            generateAssignment(localVariableMap.at(assignment_node->variable->name), assignment_node->variable->index, assignment_node->expression);
         }
         else if (shared_ptr<FunctionCallNode> function_call_node = dynamic_pointer_cast<FunctionCallNode>(bodyElement)) {
             if (function_call_node->functionName == OUTPUT_FUNCTION) {
@@ -437,6 +451,27 @@ string Function::getNextRegister() {
 
 void Function::clearRegisterNum() {
     registerNum = 0;
+}
+
+string Function::generateArrayIndex(const LocalVariable& local_variable, int index) {
+    string reg = getNextRegister();
+    string address = local_variable.address;
+    int arrayElementSize = convertArrayToVarType(local_variable.type).size();
+
+    output += "MOVE W I "+to_string(index)+","+reg+"\n";
+    output += "MULT W I "+to_string(arrayElementSize)+","+reg+"\n";
+    output += "ADD W "+address + ","+reg+"\n";
+
+    return "!"+reg;
+}
+
+string Function::getVariableAddress(const LocalVariable& local_variable, int index) {
+    if (index == -1) {
+        return local_variable.address;
+    }
+    else {
+        return generateArrayIndex(local_variable, index);
+    }
 }
 
 LocalVariable Function::getMathExpression(const shared_ptr<ASTNode>& node, vector<MathExpression>& output) {
