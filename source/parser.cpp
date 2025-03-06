@@ -406,7 +406,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         auto init = parseStatement(); // Parse initialization
         auto condition = parseExpression(); // Parse condition
         expect(TokenType::SEMICOLON, "Expected ';' after condition");
-        auto update = parseExpression(); // Parse update
+        auto update = parseStatement(); // Parse update
         expect(TokenType::R_PAREN, "Expected ')' after update expression");
 
         expect(TokenType::L_BRACE, "Expected '{' to start 'for' block");

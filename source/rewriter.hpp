@@ -235,25 +235,25 @@ private:
         std::string startLabel = generateLabel("while_start");
         std::string endLabel = generateLabel("while_end");
 
+        for (auto &stmt : node->body) {
+            stmt = rewrite(stmt);
+        }
+
         std::vector<std::shared_ptr<ASTNode>> transformed;
 
-        transformed.push_back(std::make_shared<GotoNode>(endLabel));
+        //transformed.push_back(std::make_shared<GotoNode>(endLabel));
+
+        node->body.push_back(std::make_shared<GotoNode>(startLabel));
 
         std::vector<std::shared_ptr<ASTNode>> elseBlock;
 
         transformed.push_back(std::make_shared<LabelNode>(startLabel));
         transformed.push_back(std::make_shared<IfNode>(
             std::make_shared<LogicalNotNode>(node->condition), // Negate condition
-            transformed,
+            node->body,
             elseBlock
             ));
 
-
-        for (const auto &stmt : node->body) {
-            transformed.push_back(rewrite(stmt));
-        }
-
-        transformed.push_back(std::make_shared<GotoNode>(startLabel));
         transformed.push_back(std::make_shared<LabelNode>(endLabel));
 
         return std::make_shared<BlockNode>(transformed);
@@ -262,27 +262,28 @@ private:
     std::shared_ptr<ASTNode> rewriteFor(std::shared_ptr<ForNode> node) {
         std::string startLabel = generateLabel("for_start");
         std::string endLabel = generateLabel("for_end");
+
+        for (auto &stmt : node->body) {
+            stmt = rewrite(stmt);
+        }
+
         std::vector<std::shared_ptr<ASTNode>> transformed;
 
-        transformed.push_back(std::make_shared<GotoNode>(endLabel));
+        //transformed.push_back(std::make_shared<GotoNode>(endLabel));
 
         std::vector<std::shared_ptr<ASTNode>> elseBlock;
+
+        node->body.push_back(rewrite(node->update));
+        node->body.push_back(std::make_shared<GotoNode>(startLabel));
 
         transformed.push_back(rewrite(node->init));
         transformed.push_back(std::make_shared<LabelNode>(startLabel));
         transformed.push_back(std::make_shared<IfNode>(
             std::make_shared<LogicalNotNode>(node->condition), // Negate condition
-            transformed,
+            node->body,
             elseBlock
             ));
 
-
-        for (const auto &stmt : node->body) {
-            transformed.push_back(rewrite(stmt));
-        }
-
-        transformed.push_back(rewrite(node->update));
-        transformed.push_back(std::make_shared<GotoNode>(startLabel));
         transformed.push_back(std::make_shared<LabelNode>(endLabel));
 
         return std::make_shared<BlockNode>(transformed);
