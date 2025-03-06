@@ -348,4 +348,18 @@ public:
     }
 };
 
+// AST Node for For Loop
+class BlockNode : public ASTNode {
+public:
+    std::vector<std::shared_ptr<ASTNode>> body;
+    BlockNode(std::vector<std::shared_ptr<ASTNode>> b)
+        : body(std::move(b)) {}
+    void print(int indent = 0) const override {
+        std::cout << std::string(indent, ' ') << "Block\n";
+        for (const auto &stmt : body) {
+            stmt->print(indent + 2);
+        }
+    }
+};
+
 #endif // AST_H

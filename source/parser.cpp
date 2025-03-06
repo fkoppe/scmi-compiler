@@ -382,6 +382,43 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         return std::make_shared<IfNode>(condition, thenBlock, elseBlock);
     }
 
+    // Handle `while` statement
+    if (peek().type == TokenType::KEYWORD && peek().keyword == KeywordType::WHILE) {
+        advance(); // Consume `while`
+        expect(TokenType::L_PAREN, "Expected '(' after 'while'");
+        auto condition = parseExpression(); // Parse the condition
+        expect(TokenType::R_PAREN, "Expected ')' after condition");
+
+        expect(TokenType::L_BRACE, "Expected '{' to start 'while' block");
+        std::vector<std::shared_ptr<ASTNode>> body;
+        while (!match(TokenType::R_BRACE)) {
+            body.push_back(parseStatement()); // Recursively parse statements inside `while`
+        }
+
+        return std::make_shared<WhileNode>(condition, body);
+    }
+
+    // Handle `for` statement
+    if (peek().type == TokenType::KEYWORD && peek().keyword == KeywordType::FOR) {
+        advance(); // Consume `for`
+        expect(TokenType::L_PAREN, "Expected '(' after 'for'");
+
+        auto init = parseStatement(); // Parse initialization
+        auto condition = parseExpression(); // Parse condition
+        expect(TokenType::SEMICOLON, "Expected ';' after condition");
+        auto update = parseExpression(); // Parse update
+        expect(TokenType::R_PAREN, "Expected ')' after update expression");
+
+        expect(TokenType::L_BRACE, "Expected '{' to start 'for' block");
+        std::vector<std::shared_ptr<ASTNode>> body;
+        while (!match(TokenType::R_BRACE)) {
+            body.push_back(parseStatement()); // Recursively parse statements inside `for`
+        }
+
+        return std::make_shared<ForNode>(init, condition, update, body);
+    }
+
+
     //return, goto, continue, break
     if (peek().type == TokenType::KEYWORD) {
         auto keywordType = peek().keyword;

@@ -13,7 +13,7 @@ int main() {
 
     Lexer lexer;
     //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return; if(a) { b = 0; }  }");
-    vector<Token> tokens = lexer.lexText(readFile("../code.sc"));
+    vector<Token> tokens = lexer.lexText(readFile("../../code.sc"));
 
 
     cout << "\n=== LEXER Output ===\n";
@@ -44,11 +44,19 @@ int main() {
         std::cout << "\n=== Running Rewriter ===\n";
 
         Rewriter rewriter;
+        cout << "Rewritten:\n";
+        for(auto root : ast) {
+            rewriter.rewrite(root);
+            root->print();
+        }
+
+
+        cout << "\n\nOptimize:\n";
         for(auto root : ast) {
             rewriter.optimize(root);
         }
 
-        std::cout << "==========================\n";
+        std::cout << "=========================\n";
 
 
         cout << "\n=== COMPILE Output ===\n";
