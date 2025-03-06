@@ -36,12 +36,14 @@ struct FunctionDescr {
 pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> analyze(vector<shared_ptr<ASTNode>>& nodes);
 void checkFunctionNames(const vector<FunctionDescr>& function_descrs);
 void checkForbiddenIdentifier(const string& name);
+void checkGotoLabelName(const string &name);
+
 
 
 class SemanticAnalyzer {
 
 public:
-    SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<FunctionDescr>& function_descrs);
+    SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<FunctionDescr>& function_descrs, const unordered_set<string>&);
 
     unordered_map<string, Type> getVariableList();
     string getName();
@@ -60,6 +62,7 @@ private:
     shared_ptr<FunctionDefinitionNode> function_node;
     vector<FunctionDescr> function_descrs;
     bool checkReturn;
+    unordered_set<string> labelNames;
 
     Type getArithmeticType(const shared_ptr<ArithmeticNode>&, const Type&);
     Type getCastType(Type, Type);
@@ -75,7 +78,7 @@ private:
     void checkLogicalExpression(const shared_ptr<ASTNode>&);
     void checkNode(const shared_ptr<ASTNode>&, bool);
     void checkExpression(const shared_ptr<ASTNode>&);
-
+    static void checkIndex(int index);
 };
 
 #endif // SEMANTIC_ANALYZER_H

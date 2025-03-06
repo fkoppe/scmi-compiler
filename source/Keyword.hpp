@@ -49,12 +49,22 @@ public:
 
     string miType() const {
         switch (key) {
-            case TypeType::INT:    return "W";
-            case TypeType::SHORT:  return "H";
-            case TypeType::CHAR:   return "B";
-            case TypeType::FLOAT:  return "F";
-            case TypeType::DOUBLE: return "D";
-            default: throw string("TypeType type error in miType()");
+            case TypeType::INT:
+            case TypeType::INTARRAY:
+                return "W";
+            case TypeType::SHORT:
+            case TypeType::SHORTARRAY:
+                return "H";
+            case TypeType::CHAR:
+            case TypeType::CHARARRAY:
+                return "B";
+            case TypeType::FLOAT:
+            case TypeType::FLOATARRAY:
+                return "F";
+            case TypeType::DOUBLE:
+            case TypeType::DOUBLEARRAY:
+                return "D";
+            default: throw runtime_error("TypeType type error in miType()");
         }
     }
 
@@ -104,7 +114,7 @@ static Type convertArrayToVarType(const Type type) {
         case TypeType::CHARARRAY: return Type(TypeType::CHAR);
         case TypeType::FLOATARRAY: return Type(TypeType::FLOAT);
         case TypeType::DOUBLEARRAY: return Type(TypeType::DOUBLE);
-        default: throw runtime_error("Error in type for convertArrayToVarType");
+        default: return type;
     }
     return type;
 }
