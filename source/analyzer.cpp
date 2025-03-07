@@ -127,6 +127,45 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
             checkNode(x, false);
         }
     }
+    else if (const shared_ptr<WhileNode> while_node = dynamic_pointer_cast<WhileNode>(node)) {
+        checkLogicalExpression(while_node->condition);
+
+        for (const auto& x: while_node->body) {
+            checkNode(x, false);
+        }
+    }
+    else if (const shared_ptr<ForNode> for_node = dynamic_pointer_cast<ForNode>(node)) {
+        if (auto x = dynamic_pointer_cast<VariableDeclarationNode>(for_node->init)) {
+            checkDeclaration(x);
+        }
+        else {
+            cout << "First parameter in for loop must be a Variable declaration" << endl;
+            exit(-1);
+        }
+
+        if (auto x = dynamic_pointer_cast<LogicalNode>(for_node->condition)) {
+            checkLogicalExpression(x);
+        }
+        else if (auto x = dynamic_pointer_cast<LogicalNotNode>(for_node->condition)) {
+            checkLogicalExpression(x);
+        }
+        else {
+            cout << "Second parameter in for loop must be a Logical Expression" << endl;
+            exit(-1);
+        }
+
+        if (auto x = dynamic_pointer_cast<AssignmentNode>(for_node->update)) {
+            checkAssignment(x);
+        }
+        else {
+            cout << "Third parameter in for loop must be a Assignment" << endl;
+            exit(-1);
+        }
+
+        for (const auto& x: for_node->body) {
+            checkNode(x, false);
+        }
+    }
     else if (const shared_ptr<ArrayDeclarationNode> array = dynamic_pointer_cast<ArrayDeclarationNode>(node)) {
         checkDeclaration(make_shared<VariableDeclarationNode>(VariableDeclarationNode(array->type, array->name, nullptr)));
 
@@ -355,6 +394,9 @@ void SemanticAnalyzer::checkLogicalExpression(const shared_ptr<ASTNode>& conditi
     if (const shared_ptr<LogicalNode> logical = dynamic_pointer_cast<LogicalNode>(condition_node)) {
         checkLogicalExpression(logical->left);
         checkLogicalExpression(logical->right);
+    }
+    else if (const shared_ptr<LogicalNotNode> logical_not_node = dynamic_pointer_cast<LogicalNotNode>(condition_node)) {
+        checkLogicalExpression(logical_not_node->operand);
     }
     else {
         checkExpression(condition_node);
