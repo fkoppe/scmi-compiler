@@ -11,15 +11,15 @@
 
 void writeFile(string output, string filename);
 
-int main() {
+int main(int argc, char* argv[]) {
     //auto tokens = lexString(readFile("../code.sc"));
     //Beck
-    string path = "../";
+    //string path = "../";
     //Koppe
     // string path = "../../";
 
-    string inputFile = path + "code.sc";
-    string outputFile = path + "output.mi";
+    string inputFile = argv[1];
+    string outputFile = "output.mi";
 
 
     Lexer lexer;

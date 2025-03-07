@@ -1,10 +1,19 @@
 #!/bin/bash
 
+# Ensure a file path is provided
+if [ -z "$1" ]; then
+    echo "Usage: ./run.sh <your-script>.sc"
+    exit 1
+fi
+
+# Store the file path from the argument
+CODE_FILE="$1"
+
 # Navigate to the directory where 'scmi' is located
 cd cmake-build-debug || exit 1
 
 # Execute the './scmi' command (no console print)
-./scmi > /dev/null 2>&1
+./scmi "$CODE_FILE" #> /dev/null 2>&1
 
 # Navigate back to the original directory (optional, if you want to be back in the starting directory)
 cd - > /dev/null 2>&1 || exit 1
