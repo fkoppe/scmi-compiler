@@ -97,9 +97,11 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
         else if (const shared_ptr<IfNode>& if_node = dynamic_pointer_cast<IfNode>(bodyElement)) {
             string trueLabel = getNextJumpLabel();
             string continueLabel = getNextJumpLabel();
-
+            string reg = getNextRegister();
             //push condition to stack
-            generateAssignment({Type(TypeType::INT), "-!SP"},if_node->condition);
+            generateAssignment({Type(TypeType::INT), reg},if_node->condition);
+
+            output += "MOVE W "+reg+",-!SP";
 
             //jump to then/else block
             output += "MOVE W I 0,-!SP\n";
