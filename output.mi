@@ -5,50 +5,13 @@ CALL main
 HALT
 main:
 MOVE W SP,R13
-SUB W I 8,SP
-MOVE W I 0,-8+!R13
-MOVE W I 0,-4+!R13
-__for_startxx0:
-MOVE W -4+!R13,-!SP
-MOVE W I 10,-!SP
-CMP W 4+!SP,!SP
-JLT main__jump__2
-MOVE W I 0,4+!SP
-JUMP main__jump__3
-main__jump__2:
-MOVE W I 1,4+!SP
-main__jump__3:
-ADD W I 4,SP
-CMP W I 0,!SP
-JEQ main__jump__4
-MOVE W I 0,!SP
-JUMP main__jump__5
-main__jump__4:
-MOVE W I 1,!SP
-main__jump__5:
-CMP W I 0,!SP
-JEQ main__jump__6
-MOVE W I 0,!SP
-JUMP main__jump__7
-main__jump__6:
-MOVE W I 1,!SP
-main__jump__7:
-MOVE W !SP+,-!SP
-MOVE W I 0,-!SP
-CMP W !SP,4+!SP
-JNE main__jump__0
-JUMP main__jump__1
-main__jump__0:
-MOVE W -4+!R13,-8+!R13
-MOVE W -4+!R13,-!SP
-MOVE W I 1,-!SP
-ADD W !SP,4+!SP
-ADD W I 4,SP
-MOVE W !SP+,-4+!R13
-JUMP __for_startxx0
-main__jump__1:
-__for_endxx1:
-MOVE W -8+!R13,R12
+SUB W I 4,SP
+MOVE W I 65,-4+!R13
+MOVE W -4+!R13,R12
+MOVE W I 10,-4+!R13
+MOVE W -4+!R13,R12
+MOVE W I 67,-4+!R13
+MOVE W -4+!R13,R12
 main__return__:
 MOVE W R13,SP
 RET

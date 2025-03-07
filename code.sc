@@ -1,9 +1,12 @@
 void main() {
-    int a = 0;
-
-    for(int i = 0; i < 10; i=i + 1;){
-        a = i;
-    }
+    int a = 65;
 
     @output(a);
+
+	a = 10;
+
+	@output(a);
+
+	a = 67;
+	@output(a);
 }
