@@ -102,7 +102,7 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
             generateAssignment({Type(TypeType::INT), reg},if_node->condition);
 
             output += "MOVE W "+reg+",-!SP\n";
-            registerNum--;
+            clearRegisterNum();
 
             //jump to then/else block
             output += "MOVE W I 0,-!SP\n";
@@ -190,6 +190,7 @@ void Function::generateAssignment(const LocalVariable& assign_variable, int assi
             output += "MOVE " + function_call_type.type.miType() + " !SP+,"+outputRegister+"\n";
             assignment = outputRegister;
             assignType = function_call_type.type;
+            clearRegisterNum();
         }
     }
     else if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node_expression)) {
@@ -221,8 +222,6 @@ void Function::generateAssignment(const LocalVariable& assign_variable, int assi
     if (convertArrayToVarType(assignType).getEnum() != convertArrayToVarType(assign_variable.type).getEnum()) {
         generateShift(assignType,assign_variable);
     }
-
-    clearRegisterNum();
 }
 
 
@@ -242,7 +241,7 @@ void Function::generateFunctionCall(const shared_ptr<FunctionCallNode>& function
         string reg = getNextRegister();
         generateAssignment({paramType, reg}, arguments_node);
         output += "MOVE "+paramType.miType()+" "+reg+",-!SP\n";
-        registerNum--;
+        clearRegisterNum();
         inputSize += paramType.size();
     }
 
@@ -438,7 +437,7 @@ void Function::generateArithmeticOperation(const ArithmeticType arithmetic, cons
         output += "MULT "+type.miType()+" !SP,"+reg+"\n"; // temp = b mult temp
         output += "SUB "+type.miType()+" "+reg+",4+!SP\n"; // erg = a -temp
         output += "ADD W I 4,SP\n";
-        registerNum--;
+        clearRegisterNum();
         return;
     }
 
@@ -545,6 +544,9 @@ FunctionDescr Function::findFunctionDescr(const string& name) {
 }
 
 string Function::getNextRegister() {
+    if (registerNum < 0) {
+        throw runtime_error("register underflow");
+    }
     string output = "R"+to_string(registerNum);
     registerNum++;
     //R15: PC, R14: SP, R13: BP, R12: OutputReg
@@ -556,7 +558,7 @@ string Function::getNextRegister() {
 }
 
 void Function::clearRegisterNum() {
-    registerNum = 0;
+    registerNum--;
 }
 
 string Function::getOutput() {
