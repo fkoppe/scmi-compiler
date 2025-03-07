@@ -101,7 +101,8 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
             //push condition to stack
             generateAssignment({Type(TypeType::INT), reg},if_node->condition);
 
-            output += "MOVE W "+reg+",-!SP";
+            output += "MOVE W "+reg+",-!SP\n";
+            registerNum--;
 
             //jump to then/else block
             output += "MOVE W I 0,-!SP\n";
@@ -238,8 +239,10 @@ void Function::generateFunctionCall(const shared_ptr<FunctionCallNode>& function
     for (int i = function_call_type.params.size() - 1; i >= 0; i--) {
         Type paramType =  function_call_type.params.at(i).second;
         shared_ptr<ASTNode> arguments_node = function_call_node->arguments.at(i);
-
-        generateAssignment({paramType, "-!SP"}, arguments_node);
+        string reg = getNextRegister();
+        generateAssignment({paramType, reg}, arguments_node);
+        output += "MOVE "+paramType.miType()+" "+reg+",-!SP\n";
+        registerNum--;
         inputSize += paramType.size();
     }
 
