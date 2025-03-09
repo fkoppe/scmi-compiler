@@ -63,7 +63,7 @@ class Function {
         void generateNodes(const vector<shared_ptr<ASTNode>>&);
         FunctionDescr findFunctionDescr(const string&);
         void generateFunctionCall(const shared_ptr<FunctionCallNode>&, const FunctionDescr&);
-        void generateAssignment(const LocalVariable& assign_variable, int index, const shared_ptr<ASTNode>& node_expression);
+        void generateAssignment(const LocalVariable& assign_variable, shared_ptr<ASTNode> index, const shared_ptr<ASTNode>& node_expression);
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
         int addVariables(const unordered_map<string, Type>&);
         void generateOutputFunction(const shared_ptr<FunctionCallNode>&);
@@ -75,11 +75,11 @@ class Function {
         void generateArithmeticExpression(const MathExpression&, const Type& expected_type);
         void generateArithmeticOperation(ArithmeticType,Type);
         void malloc(int size, const string& assignment);
-        string generateArrayIndex(const LocalVariable& local_variable, int index);
+        string generateArrayIndex(const LocalVariable& local_variable, shared_ptr<ASTNode> index);
 
         string getNextRegister();
         void clearRegisterNum();
-        string getVariableAddress(const LocalVariable& local_variable, int index);
+        string getVariableAddress(const LocalVariable& local_variable, shared_ptr<ASTNode> index);
         void generateMathExpression(const shared_ptr<ASTNode>&, Type);
 };
 

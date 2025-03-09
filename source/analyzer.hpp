@@ -70,7 +70,7 @@ private:
     void checkLogicalExpression(const shared_ptr<ASTNode>&);
     void checkNode(const shared_ptr<ASTNode>&, bool);
     void checkExpression(const shared_ptr<ASTNode>&);
-    static void checkIndex(int index);
+    void checkIndex(const shared_ptr<ASTNode>& index);
 };
 
 #endif // SEMANTIC_ANALYZER_H

@@ -133,7 +133,7 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
             if (arr->size == -1) {
                 //fill values
                 for (int i = 0; i < arr->arrayValues.size(); i++) {
-                    string reg = generateArrayIndex(local_variable, i);
+                    string reg = generateArrayIndex(local_variable, make_shared<NumberNode>(i));
                     generateAssignment({arrayElementType,reg}, arr->arrayValues.at(i));
                     clearRegisterNum();
                 }
@@ -152,7 +152,7 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
 }
 
 //                                                                      index: for array indexing
-void Function::generateAssignment(const LocalVariable& assign_variable, int assign_variable_index, const shared_ptr<ASTNode>& node_expression) {
+void Function::generateAssignment(const LocalVariable& assign_variable, shared_ptr<ASTNode> assign_variable_index, const shared_ptr<ASTNode>& node_expression) {
     string assignment;
     Type assignType;
 
@@ -164,7 +164,7 @@ void Function::generateAssignment(const LocalVariable& assign_variable, int assi
         LocalVariable local_variable = localVariableMap.at(identifier_node->name);
 
         //"normal" variable
-        if (identifier_node->index == -1) {
+        if (identifier_node->index == nullptr) {
             assignment = local_variable.address;
             assignType = local_variable.type;
         }
@@ -256,7 +256,7 @@ void Function::generateFunctionCall(const shared_ptr<FunctionCallNode>& function
 
 //wrapper for index=-1
 void Function::generateAssignment(const LocalVariable &assign_variable, const shared_ptr<ASTNode> &node_expression) {
-    generateAssignment(assign_variable,-1,node_expression);
+    generateAssignment(assign_variable,nullptr,node_expression);
 }
 
 //assign all variables addresses and store them in localVariableMap
@@ -471,12 +471,15 @@ void Function::malloc(int size, const string& assignment) {
 }
 
 //get address to element of array with index and return !Rx (value of indexed element)
-string Function::generateArrayIndex(const LocalVariable& local_variable, int index) {
+string Function::generateArrayIndex(const LocalVariable& local_variable, shared_ptr<ASTNode> index) {
     string reg = getNextRegister();
     string address = local_variable.address;
     int arrayElementSize = convertArrayToVarType(local_variable.type).size();
 
-    output += "MOVE W I "+to_string(index)+","+reg+"\n";
+    //output += "MOVE W I "+to_string(index)+","+reg+"\n";
+
+    generateAssignment({Type(TypeType::INT),reg}, index);
+
     output += "MULT W I "+to_string(arrayElementSize)+","+reg+"\n";
     output += "ADD W "+address + ","+reg+"\n";
     output += "ADD W I "+to_string(ARRAY_DESCRIPTOR_SIZE)+","+reg+"\n";
@@ -484,8 +487,8 @@ string Function::generateArrayIndex(const LocalVariable& local_variable, int ind
     return "!"+reg;
 }
 
-string Function::getVariableAddress(const LocalVariable& local_variable, int index) {
-    if (index == -1) {
+string Function::getVariableAddress(const LocalVariable& local_variable, shared_ptr<ASTNode> index) {
+    if (index == nullptr) {
         return local_variable.address;
     }
     else {

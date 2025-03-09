@@ -1,10 +1,19 @@
-target_sources(
-    scmi
-    PRIVATE
-    lexer.hpp
-    lexer.cpp
-    parser.hpp
-    parser.cpp
-    token.hpp
-    rewriter.hpp
+project(scmi_compiler)
+
+add_executable(
+        scmi_compiler
+        main.cpp
+        analyzer.hpp
+        analyzer.cpp
+        ast.h
+        generator.hpp
+        generator.cpp
+        Keyword.hpp
+        lexer.hpp
+        lexer.cpp
+        parser.hpp
+        parser.cpp
+        rewriter.hpp
+        token.hpp
+        token.cpp
 )

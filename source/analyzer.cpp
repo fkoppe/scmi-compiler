@@ -199,7 +199,7 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
         checkIdentifier(ident);
         Type foundType = findVariable(ident->name);
 
-        if (ident->index != -1) {
+        if (ident->index != nullptr) {
             checkIndex(ident->index);
             foundType = convertArrayToVarType(foundType);
         }
@@ -241,8 +241,8 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
 void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
     if (shared_ptr<IdentifierNode> ident = dynamic_pointer_cast<IdentifierNode>(node)){
         checkIdentifier(ident);
-        if (ident->index != -1) {
-            checkIndex(ident->index);
+        if (ident->index != nullptr) {
+            this->checkIndex(ident->index);
         }
     }
     else if (shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)){
@@ -271,9 +271,9 @@ void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
     }
 }
 
-void SemanticAnalyzer::checkIndex(const int index) {
-    if (index < 0) {
-        cout << "Invalid index: " << index << endl;
+void SemanticAnalyzer::checkIndex(const shared_ptr<ASTNode>& index) {
+    if (getVariableType(index, Type(TypeType::INT)).getEnum() != TypeType::INT) {
+        cout << "invalid type for index" << endl;
         exit(-1);
     }
 }
