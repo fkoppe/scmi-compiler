@@ -13,6 +13,27 @@
 void Lexer::processWord() {
     TokenType type = getToken(word);
 
+    if(type == TokenType::SPECIAL) {
+        Token one = TokenType::NUMBER;
+        one.number = NumberType::DECIMAL;
+        one.raw = "1";
+
+        Token zero = TokenType::NUMBER;
+        zero.number = NumberType::DECIMAL;
+        zero.raw = "0";
+
+        if(word == "false") {
+            result.push_back(one);
+        }
+        if(word == "true") {
+            result.push_back(zero);
+        }
+
+        word.clear();
+
+        return;
+    }
+
     Token token = Token(type);
     token.line = line;
     token.num = num;
@@ -122,6 +143,10 @@ string readFile(const string& path) {
 }
 
 TokenType getToken(const string& word) {
+    if(SPECIAL_SET.count(word)) {
+        return TokenType::SPECIAL;
+    }
+
     if(KEYWORD_SET.count(word)) {
         return TokenType::KEYWORD;
     }
