@@ -80,7 +80,7 @@ vector<Token> Lexer::lexText(const string& text) {
     bool skipping_line = false;
 
     const unordered_set stopSymbols = {'(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '!', '&', '|', '\n', '\t', ' ', '+', '-', '*', '/', '%'};
-    const unordered_set skipSymbols = {'\r'};
+    const unordered_set skipSymbols = {'\r', '\000'};
 
     cout << "\nLexing input..." << endl;
 
