@@ -14,21 +14,47 @@ void Lexer::processWord() {
     TokenType type = getToken(word);
 
     if(type == TokenType::SPECIAL) {
-        Token one = TokenType::NUMBER;
-        one.number = NumberType::DECIMAL;
-        one.raw = "1";
-
-        Token zero = TokenType::NUMBER;
-        zero.number = NumberType::DECIMAL;
-        zero.raw = "0";
-
         if(word == "false") {
+            Token one = TokenType::NUMBER;
+            one.line = line;
+            one.num = num;
+            one.number = NumberType::DECIMAL;
+            one.raw = "1";
+
             result.push_back(one);
         }
         if(word == "true") {
+            Token zero = TokenType::NUMBER;
+            zero.line = line;
+            zero.num = num;
+            zero.number = NumberType::DECIMAL;
+            zero.raw = "0";
+
             result.push_back(zero);
         }
+        if(word == "string") {
+            Token l = TokenType::L_BRACK;
+            l.line = line;
+            l.num = num;
+            l.raw = "[";
 
+            Token r = TokenType::R_BRACK;
+            r.line = line;
+            r.num = num;
+            r.raw = "]";
+
+            Token token = TokenType::KEYWORD;
+            token.line = line;
+            token.num = num;
+            token.raw = "char";
+            token.keyword = toKeywordType(word);
+
+            result.push_back(token);
+            result.push_back(l);
+            result.push_back(r);
+        }
+
+        cout << word << " ";
         word.clear();
 
         return;

@@ -18,6 +18,7 @@ using namespace std;
 const unordered_set<string> SPECIAL_SET = {
     "true",
     "false",
+    "string",
 };
 
 const unordered_set<string> TYPE_SET = {
