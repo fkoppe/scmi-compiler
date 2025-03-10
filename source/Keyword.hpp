@@ -50,20 +50,21 @@ public:
     string miType() const {
         switch (key) {
             case TypeType::INT:
-            case TypeType::INTARRAY:
                 return "W";
             case TypeType::SHORT:
-            case TypeType::SHORTARRAY:
                 return "H";
             case TypeType::CHAR:
-            case TypeType::CHARARRAY:
                 return "B";
             case TypeType::FLOAT:
-            case TypeType::FLOATARRAY:
                 return "F";
             case TypeType::DOUBLE:
-            case TypeType::DOUBLEARRAY:
                 return "D";
+            case TypeType::INTARRAY:
+            case TypeType::SHORTARRAY:
+            case TypeType::CHARARRAY:
+            case TypeType::FLOATARRAY:
+            case TypeType::DOUBLEARRAY:
+                return "W";
             default: throw runtime_error("TypeType type error in miType()");
         }
     }

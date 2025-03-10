@@ -25,19 +25,29 @@ int main(int argc, char* argv[]) {
 
     string inputFile = argv[1];
     //string inputFile = "../../code.sc";
-    string outputFile = "output.mi";
+
+    string outputFile;
+    string stdlib;
+    if (argc == 3) {
+        outputFile = argv[2];
+        stdlib = argv[3];
+    }
+    else {
+        stdlib = "./stdlib.sc";
+        outputFile = "./output.mi";
+    }
 
 
     Lexer lexer;
     //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return; if(a) { b = 0; }  }");
 
     std::string file_data = readFile(inputFile);
-    std::string std_data = readFile("stdlib.sc");
+    std::string std_data = readFile(stdlib);
 
-    std_data.append(file_data);
+    file_data.append(std_data);
 
 
-    vector<Token> tokens = lexer.lexText(std_data);
+    vector<Token> tokens = lexer.lexText(file_data);
 
 
     cout << "\n=== LEXER Output ===\n";
