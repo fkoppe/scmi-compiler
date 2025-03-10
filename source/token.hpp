@@ -15,6 +15,11 @@
 
 using namespace std;
 
+const unordered_set<string> SPECIAL_SET = {
+    "true",
+    "false",
+};
+
 const unordered_set<string> TYPE_SET = {
     "void",
     "int",
@@ -54,6 +59,7 @@ enum class NumberType {
 };
 
 enum class TokenType {
+    SPECIAL,
     KEYWORD,
     IDENTIFIER,
     L_PAREN,

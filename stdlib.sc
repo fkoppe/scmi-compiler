@@ -1,9 +1,10 @@
 void prints(char[] string) {
     int len = @length(string);
+    println(len);
 
-    for(int i = 0; i < len; i++) {
-        printc(string[i]);
-    }
+    //for(int i = 0; i < len; i++) {
+    //    printcln(string[i]);
+   // }
 }
 
 void printsln(char[] string) {
