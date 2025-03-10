@@ -75,17 +75,54 @@ void Lexer::processWord() {
     word.clear();
 }
 
+void Lexer::lexString(string str) {
+    word = "{";
+    processWord();
+
+    for (int i = 0; i < str.length() - 1; i++) {
+        const int c = str[i];
+        word = std::to_string(c);
+        processWord();
+        word = ",";
+        processWord();
+    }
+    const int c = str[str.length() - 1];
+    word = std::to_string(c);
+    processWord();
+
+    word = "}";
+    processWord();
+
+}
+
 vector<Token> Lexer::lexText(const string& text) {
     bool started_word = false;
     bool skipping_line = false;
+    bool str = false;
+    string charStr = "";
 
-    const unordered_set stopSymbols = {'(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '!', '&', '|', '\n', '\t', ' ', '+', '-', '*', '/', '%'};
+    const unordered_set stopSymbols = {'(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '!', '&', '|', '\n', '\t', ' ', '+', '-', '*', '/', '%', '"'};
     const unordered_set skipSymbols = {'\r', '\000'};
 
     cout << "\nLexing input..." << endl;
 
     for (size_t i = 0; i < text.size(); i++) {
         const char character = text.at(i);
+
+        if (character == '"') {
+            if (str) {
+                lexString(charStr);
+            }
+            str = !str;
+            continue;
+        }
+
+        if (str) {
+            charStr += character;
+            continue;
+        }
+
+
 
         if(skipping_line) {
             if('\n' == character) {
@@ -216,6 +253,8 @@ TokenType getToken(const string& word) {
             return TokenType::SEMICOLON;
         case ',':
             return TokenType::COMMA;
+        case '"':
+            return TokenType::QUOTATION;
     };
 
     if(isalpha(word[0]) || word[0] == '@') {

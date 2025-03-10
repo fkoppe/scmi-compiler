@@ -35,8 +35,8 @@ struct LocalVariable {
 using OperationUnion = variant<LogicalType, ArithmeticType>;
 
 struct MathExpression {
-    LocalVariable expression_L;
-    LocalVariable expression_R;
+    shared_ptr<ASTNode> expression_L;
+    shared_ptr<ASTNode> expression_R;
     OperationUnion op;
 };
 
@@ -70,7 +70,7 @@ class Function {
         void generateShift(const Type& from, const LocalVariable& to);
         static string getCompareJump(const LogicalType&);
         string getNextJumpLabel();
-        LocalVariable getMathExpression(const shared_ptr<ASTNode>&, vector<MathExpression>&);
+        shared_ptr<ASTNode> getMathExpression(const shared_ptr<ASTNode>&, vector<MathExpression>&);
         void generateLogicalExpression(const MathExpression&);
         void generateArithmeticExpression(const MathExpression&, const Type& expected_type);
         void generateArithmeticOperation(ArithmeticType,Type);

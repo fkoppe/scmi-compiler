@@ -19,6 +19,7 @@ private:
     vector<Token> result;
 
     void processWord();
+    void lexString(string str);
 };
 
 string readFile(const string& path);

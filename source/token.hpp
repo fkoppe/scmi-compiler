@@ -85,6 +85,7 @@ enum class TokenType {
     MOD,
     END_OF_FILE,
     LABEL,
+    QUOTATION,
 };
 
 TypeType toTypeType(string name);

@@ -187,10 +187,13 @@ void Function::generateAssignment(const LocalVariable& assign_variable, shared_p
             string outputRegister = getNextRegister();
 
             //pop function return to Rx
-            output += "MOVE " + function_call_type.type.miType() + " !SP+,"+outputRegister+"\n";
-            assignment = outputRegister;
+            // output += "MOVE " + function_call_type.type.miType() + " !SP+,"+outputRegister+"\n";
+            // assignment = outputRegister;
+            // assignType = function_call_type.type;
+            // clearRegisterNum();
+
+            assignment = "!SP+";
             assignType = function_call_type.type;
-            clearRegisterNum();
         }
     }
     else if (const shared_ptr<LogicalNode> logical_node = dynamic_pointer_cast<LogicalNode>(node_expression)) {
@@ -309,28 +312,42 @@ void Function::generateLogicalExpression(const MathExpression& logical_expressio
     LogicalType logType = get<LogicalType>(logical_expression.op);
 
     //push "left" expression to stack if exist
-    if (logical_expression.expression_L.address != "") {
-        if (logical_expression.expression_L.type.getEnum() != TypeType::INT) {
-            output += "MOVE W I 0,-!SP\n";
-            output += "MOVE "+logical_expression.expression_L.type.miType()+" "+logical_expression.expression_L.address+",!SP\n";
-            generateShift(logical_expression.expression_L.type, {Type(TypeType::INT), "!SP"});
-        }
-        else {
-            output += "MOVE W "+logical_expression.expression_L.address+",-!SP\n";
-        }
+    // if (logical_expression.expression_L.address != "") {
+    //     if (logical_expression.expression_L.type.getEnum() != TypeType::INT) {
+    //         output += "MOVE W I 0,-!SP\n";
+    //         output += "MOVE "+logical_expression.expression_L.type.miType()+" "+logical_expression.expression_L.address+",!SP\n";
+    //         generateShift(logical_expression.expression_L.type, {Type(TypeType::INT), "!SP"});
+    //     }
+    //     else {
+    //         output += "MOVE W "+logical_expression.expression_L.address+",-!SP\n";
+    //     }
+    // }
+
+    if (logical_expression.expression_L != nullptr) {
+        string pushReg = getNextRegister();
+        generateAssignment({Type(TypeType::INT),pushReg},logical_expression.expression_L);
+        output += "MOVE W " + pushReg + ",-!SP\n";
+        clearRegisterNum();
     }
 
-    //push "right" expression to stack if exist
-    if (logical_expression.expression_R.address != "") {
-        if (logical_expression.expression_R.type.getEnum() != TypeType::INT) {
-            output += "MOVE W I 0,-!SP\n";
-            output += "MOVE "+logical_expression.expression_R.type.miType()+" "+logical_expression.expression_R.address+",!SP\n";
-            generateShift(logical_expression.expression_R.type, {Type(TypeType::INT), "!SP"});
-        }
-        else {
-            output += "MOVE W "+logical_expression.expression_R.address+",-!SP\n";
-        }
+    if (logical_expression.expression_R != nullptr) {
+        string pushReg = getNextRegister();
+        generateAssignment({Type(TypeType::INT),pushReg},logical_expression.expression_R);
+        output += "MOVE W " + pushReg + ",-!SP\n";
+        clearRegisterNum();
     }
+
+    // //push "right" expression to stack if exist
+    // if (logical_expression.expression_R.address != "") {
+    //     if (logical_expression.expression_R.type.getEnum() != TypeType::INT) {
+    //         output += "MOVE W I 0,-!SP\n";
+    //         output += "MOVE "+logical_expression.expression_R.type.miType()+" "+logical_expression.expression_R.address+",!SP\n";
+    //         generateShift(logical_expression.expression_R.type, {Type(TypeType::INT), "!SP"});
+    //     }
+    //     else {
+    //         output += "MOVE W "+logical_expression.expression_R.address+",-!SP\n";
+    //     }
+    // }
 
     if (logType == LogicalType::AND) {
         //ANDNOT s1,s2 => s2 && !s1
@@ -409,29 +426,44 @@ string Function::getNextJumpLabel() {
 void Function::generateArithmeticExpression(const MathExpression& arithmetic_expression, const Type& expected_type) {
     ArithmeticType ariType = get<ArithmeticType>(arithmetic_expression.op);
 
-    LocalVariable l = arithmetic_expression.expression_L;
-    LocalVariable r = arithmetic_expression.expression_R;
-    if (l.address != "") {
-        if (l.type.miType() != expected_type.miType()) {
-            output += "MOVE "+expected_type.miType()+" I 0,-!SP\n";
-            output += "MOVE "+ l.type.miType() + " " + l.address + ",!SP\n";
-            generateShift(l.type, {expected_type,"!SP"});
-        }
-        else {
-            output += "MOVE "+ expected_type.miType() + " " + l.address + ",-!SP\n";
-        }
+    // LocalVariable l = arithmetic_expression.expression_L;
+    // LocalVariable r = arithmetic_expression.expression_R;
+    // if (l.address != "") {
+    //     if (l.type.miType() != expected_type.miType()) {
+    //         output += "MOVE "+expected_type.miType()+" I 0,-!SP\n";
+    //         output += "MOVE "+ l.type.miType() + " " + l.address + ",!SP\n";
+    //         generateShift(l.type, {expected_type,"!SP"});
+    //     }
+    //     else {
+    //         output += "MOVE "+ expected_type.miType() + " " + l.address + ",-!SP\n";
+    //     }
+    // }
+    //
+    // if (arithmetic_expression.expression_R.address != "") {
+    //     if (r.type.miType() != expected_type.miType()) {
+    //         output += "MOVE "+expected_type.miType()+" I 0,-!SP\n";
+    //         output += "MOVE "+ r.type.miType() + " " + r.address + ",!SP\n";
+    //         generateShift(r.type, {expected_type,"!SP"});
+    //     }
+    //     else {
+    //         output += "MOVE "+ expected_type.miType() + " " + r.address + ",-!SP\n";
+    //     }
+    // }
+
+    if (arithmetic_expression.expression_L != nullptr) {
+        string pushReg = getNextRegister();
+        generateAssignment({expected_type,pushReg},arithmetic_expression.expression_L);
+        output += "MOVE " + expected_type.miType() +" " + pushReg + ",-!SP\n";
+        clearRegisterNum();
     }
 
-    if (arithmetic_expression.expression_R.address != "") {
-        if (r.type.miType() != expected_type.miType()) {
-            output += "MOVE "+expected_type.miType()+" I 0,-!SP\n";
-            output += "MOVE "+ r.type.miType() + " " + r.address + ",!SP\n";
-            generateShift(r.type, {expected_type,"!SP"});
-        }
-        else {
-            output += "MOVE "+ expected_type.miType() + " " + r.address + ",-!SP\n";
-        }
+    if (arithmetic_expression.expression_R != nullptr) {
+        string pushReg = getNextRegister();
+        generateAssignment({expected_type,pushReg},arithmetic_expression.expression_R);
+        output += "MOVE " + expected_type.miType() +" " + pushReg + ",-!SP\n";
+        clearRegisterNum();
     }
+
     generateArithmeticOperation(ariType, expected_type);
 }
 
@@ -517,28 +549,20 @@ void Function::generateMathExpression(const shared_ptr<ASTNode>& node, Type type
 }
 
 //recursive function for post order array
-LocalVariable Function::getMathExpression(const shared_ptr<ASTNode>& node, vector<MathExpression>& output) {
-    if (const shared_ptr<NumberNode> numberNode = dynamic_pointer_cast<NumberNode>(node)) {
-        LocalVariable var = {Type(TypeType::INT), "I "+to_string(numberNode->value)};
-        return var;
-    }
-    if (const shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(node)) {
-        LocalVariable local_variable = localVariableMap.at(identifier_node->name);
-        return local_variable;
-    }
+shared_ptr<ASTNode> Function::getMathExpression(const shared_ptr<ASTNode>& node, vector<MathExpression>& output) {
     if (const shared_ptr<LogicalNode> log = dynamic_pointer_cast<LogicalNode>(node)) {
         output.push_back({getMathExpression(log->left, output), getMathExpression(log->right, output), log->logicalType});
-        return {};
+        return nullptr;
     }
     if (const shared_ptr<ArithmeticNode> ari = dynamic_pointer_cast<ArithmeticNode>(node)) {
         output.push_back({getMathExpression(ari->left, output), getMathExpression(ari->right, output), ari->arithmeticType});
-        return {};
+        return nullptr;
     }
     if (const shared_ptr<LogicalNotNode> logNot = dynamic_pointer_cast<LogicalNotNode>(node)) {
-        output.push_back({getMathExpression(logNot->operand, output), {},LogicalType::NOT});
-        return {};
+        output.push_back({getMathExpression(logNot->operand, output), nullptr,LogicalType::NOT});
+        return nullptr;
     }
-    throw runtime_error("invalid logical expression AST Node");
+    return node;
 }
 
 FunctionDescr Function::findFunctionDescr(const string& name) {

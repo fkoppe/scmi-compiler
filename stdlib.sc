@@ -1,6 +1,5 @@
 void prints(char[] str) {
     int len = @length(str);
-    println(len);
 
     for(int i = 0; i < len; i++) {
         printc(str[i]);
@@ -22,34 +21,35 @@ void printcln(char character) {
 }
 
 void print(int integer) {
-    if(0 == integer) {
-        @output(integer + 48);
+    if (integer == 0) {
+        @output(48); // ASCII '0'
+        return;
     }
 
-    while(integer != 0) {
-        @output((integer % 10) + 48);
+    if (integer < 0) {
+        @output(45); // ASCII '-'
+        integer = 0-integer; // Make it positive for processing
+    }
+
+    // Store digits in an array (since recursion or decrementing might not be allowed)
+    int[] digits = int[10]; // Enough space for an int (assuming 32-bit)
+    int index = 0;
+
+    while (integer != 0) {
+        digits[index] = 48 + (integer % 10) ; // Store ASCII character
         integer /= 10;
+        index++;
+    }
+
+    // Print stored digits in the correct order
+    int i = index - 1;
+    while (i >= 0) {
+        @output(digits[i]);
+        i = i - 1; // Manual decrement
     }
 }
 
 void println(int integer) {
     print(integer);
     @output(10);
-}
-
-int fib(int x) {
-    int a = 0;
-    int b = 0;
-
-    if(x == 0) {
-        return 0;
-    }
-    else if(x == 1) {
-        return 1;
-    }
-    else {
-        a = fib(x - 1);
-        b = fib(x - 2);
-        return a + b;
-    }
 }
