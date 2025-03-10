@@ -296,14 +296,20 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
         found = true;
         vector<pair<string,Type>> params;
 
-        for (const auto& x: function_call_node->arguments) {
-            if (shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(x)) {
-                params.emplace_back("",variableList.at(identifier_node->name));
-            }
-            else {
-                found = false;
-            }
+        if (function_call_node->arguments.size() != 1) {
+            cout << "Invalid number of arguments for " << OUTPUT_FUNCTION << endl;
+            exit(-1);
         }
+
+        shared_ptr<ASTNode> argument = function_call_node->arguments.at(0);
+
+        Type type = getVariableType(argument, Type(TypeType::INT));
+        if (type.getEnum() != TypeType::INT) {
+            cout << "invalid type for argument in " << OUTPUT_FUNCTION << endl;
+            exit(-1);
+        }
+
+        params.emplace_back("", type);
 
         call_func = {function_call_node->functionName, Type(TypeType::VOID), params};
     }

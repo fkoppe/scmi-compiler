@@ -291,12 +291,9 @@ int Function::addVariables(const unordered_map<string, Type>& variables) {
 
 //special output Function to display values in register
 void Function::generateOutputFunction(const shared_ptr<FunctionCallNode>& output) {
+    auto argumment = output->arguments.at(0);
     //only outputs first paramter to R12
-    for (int i = 0; i < 1; i++) {
-        shared_ptr<IdentifierNode> identifier_node = dynamic_pointer_cast<IdentifierNode>(output->arguments.at(i));
-        Type outputType = localVariableMap.at(identifier_node->name).type;
-        generateAssignment({outputType,"R12"},output->arguments.at(i));
-    }
+    generateAssignment({Type(TypeType::INT),"R12"},argumment);
 }
 
 void Function::generateLogicalExpression(const MathExpression& logical_expression) {

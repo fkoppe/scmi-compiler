@@ -14,10 +14,19 @@ if [ ! -f "$SCRIPT_FILE" ]; then
     exit 1
 fi
 
+rm ./output.mi
+rm ./output.txt
+
 cmake -B "./build_cli" -G "Unix Makefiles" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE="Release"
 cmake --build ./$BUILD_DIR
 
-./$BUILD_DIR/scmi_output "$SCRIPT_FILE" >/dev/null
+./$BUILD_DIR/scmi_compiler "$SCRIPT_FILE"
+
+# check of output.mi exist, if not end script with error "error while compiling"
+if [ ! -f "output.mi" ]; then
+    echo "Error: Compilation failed."
+    exit 1
+fi
 
 java -jar mi-sim-cli.jar output.mi > output.txt
 
