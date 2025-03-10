@@ -249,7 +249,7 @@ private:
 
         transformed.push_back(std::make_shared<LabelNode>(startLabel));
         transformed.push_back(std::make_shared<IfNode>(
-            std::make_shared<LogicalNotNode>(node->condition), // Negate condition
+            node->condition, // Negate condition
             node->body,
             elseBlock
             ));
@@ -279,7 +279,7 @@ private:
         transformed.push_back(rewrite(node->init));
         transformed.push_back(std::make_shared<LabelNode>(startLabel));
         transformed.push_back(std::make_shared<IfNode>(
-            std::make_shared<LogicalNotNode>(node->condition), // Negate condition
+            node->condition, // Negate condition
             node->body,
             elseBlock
             ));
