@@ -1,13 +1,14 @@
-void prints(char[] string) {
-    int len = @length(string);
+void prints(char[] str) {
+    int len = @length(str);
+    println(len);
 
     for(int i = 0; i < len; i++) {
-        printc(string[i]);
+        printc(str[i]);
     }
 }
 
-void printsln(char[] string) {
-    prints(string);
+void printsln(char[] str) {
+    prints(str);
     @output(10);
 }
 
