@@ -216,12 +216,19 @@ void Function::generateAssignment(const LocalVariable& assign_variable, shared_p
         throw runtime_error("invalid assignment AST Node");
     }
 
-    output += "MOVE " + assign_variable.type.miType() + " " + assignment + "," + getVariableAddress(assign_variable, assign_variable_index) + "\n";
+    string assignVariableAddress = getVariableAddress(assign_variable, assign_variable_index);
 
-    //always need to call convertArrayToVarType because of array indexing
     if (convertArrayToVarType(assignType).getEnum() != convertArrayToVarType(assign_variable.type).getEnum()) {
-        generateShift(assignType,assign_variable);
+         string shiftReg = getNextRegister();
+         output += "MOVE " + assignType.miType() + " " + assignment + ","+shiftReg+"\n";
+         output += "MOVE " + assignType.miType() + " " + shiftReg +  "," + assignVariableAddress + "\n";
+         clearRegisterNum();
     }
+    else {
+        output += "MOVE " + assign_variable.type.miType() + " " + assignment + "," + assignVariableAddress + "\n";
+    }
+
+
 }
 
 
@@ -370,6 +377,7 @@ void Function::generateLogicalExpression(const MathExpression& logical_expressio
 }
 
 void Function::generateShift(const Type& from, const LocalVariable& to) {
+
     output += "SH I -"+to_string((to.type.size()-from.size())*8)+","+to.address+","+to.address+"\n";
 }
 
