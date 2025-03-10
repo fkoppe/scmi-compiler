@@ -281,12 +281,7 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 
         shared_ptr<ASTNode> value;
 
-        //function call: id()
-        if(peek2().type == TokenType::L_PAREN) {
-            value = parseFunctionCall();
-        } else {
-            value = parseExpression();
-        }
+        value = parseExpression();
 
         expect(TokenType::SEMICOLON, "Expected ';' at the end of declaration");
         return make_shared<VariableDeclarationNode>(convertStringToType(varType), varName, value);
