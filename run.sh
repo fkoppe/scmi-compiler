@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUILD_DIR="cmake-build-debug"
+BUILD_DIR="build_cli"
 
 if [ -z "$1" ]; then
     echo "Usage: run.sh <your-script.sc>"
@@ -17,7 +17,8 @@ fi
 rm ./output.mi
 rm ./output.txt
 
-cmake --build ./$BUILD_DIR/
+cmake -B "./build_cli" -G "Unix Makefiles" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE="Release"
+cmake --build ./$BUILD_DIR
 
 ./$BUILD_DIR/scmi_compiler "$SCRIPT_FILE"
 
