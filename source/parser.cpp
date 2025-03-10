@@ -217,18 +217,121 @@ shared_ptr<ASTNode> Parser::parseFunctionCall() {
 
 
 // Parse a statement (expression followed by a semicolon)
-shared_ptr<ASTNode> Parser::parseStatement() {
+shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
+
+    if (peek().type == TokenType::IDENTIFIER) {
+        auto ident = peek();
+
+        auto one = Token(TokenType::NUMBER);
+        one.num = 1;
+        one.raw = "1";
+        //return (current < tokens.size()) ? tokens[current] : eof;
+
+        if(peek2().type == TokenType::ADD && peek3().type == TokenType::ADD) {
+            advance();
+            advance();
+            advance();
+
+            tokens.insert(tokens.begin() + current, one);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ADD));
+            tokens.insert(tokens.begin() + current, ident);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
+            tokens.insert(tokens.begin() + current, ident);
+
+            return parseStatement();
+        }
+
+        if(peek2().type == TokenType::SUB && peek3().type == TokenType::SUB) {
+            advance();
+            advance();
+            advance();
+
+            tokens.insert(tokens.begin() + current, one);
+            tokens.insert(tokens.begin() + current, Token(TokenType::SUB));
+            tokens.insert(tokens.begin() + current, ident);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
+            tokens.insert(tokens.begin() + current, ident);
+
+            return parseStatement();
+        }
+
+        if(peek2().type == TokenType::ADD && peek3().type == TokenType::ASSIGN) {
+            advance();
+            advance();
+            advance();
+
+            tokens.insert(tokens.begin() + current, Token(TokenType::ADD));
+            tokens.insert(tokens.begin() + current, ident);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
+            tokens.insert(tokens.begin() + current, ident);
+
+            return parseStatement();
+        }
+
+        if(peek2().type == TokenType::SUB && peek3().type == TokenType::ASSIGN) {
+            advance();
+            advance();
+            advance();
+
+            tokens.insert(tokens.begin() + current, Token(TokenType::SUB));
+            tokens.insert(tokens.begin() + current, ident);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
+            tokens.insert(tokens.begin() + current, ident);
+
+            return parseStatement();
+        }
+
+        if(peek2().type == TokenType::MULT && peek3().type == TokenType::ASSIGN) {
+            advance();
+            advance();
+            advance();
+
+            tokens.insert(tokens.begin() + current, Token(TokenType::MULT));
+            tokens.insert(tokens.begin() + current, ident);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
+            tokens.insert(tokens.begin() + current, ident);
+
+            return parseStatement();
+        }
+
+        if(peek2().type == TokenType::DIV && peek3().type == TokenType::ASSIGN) {
+            advance();
+            advance();
+            advance();
+
+            tokens.insert(tokens.begin() + current, Token(TokenType::DIV));
+            tokens.insert(tokens.begin() + current, ident);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
+            tokens.insert(tokens.begin() + current, ident);
+
+            return parseStatement();
+        }
+
+        if(peek2().type == TokenType::MOD && peek3().type == TokenType::ASSIGN) {
+            advance();
+            advance();
+            advance();
+
+            tokens.insert(tokens.begin() + current, Token(TokenType::MOD));
+            tokens.insert(tokens.begin() + current, ident);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
+            tokens.insert(tokens.begin() + current, ident);
+
+            return parseStatement();
+        }
+    }
 
     if (peek().type == TokenType::KEYWORD && peek2().type == TokenType::L_BRACK && peek3().type == TokenType::R_BRACK) {
         auto arrDec = parseArrayDeclaration();
-        expect(TokenType::SEMICOLON, "Expected ';' after array assignment");
+
+        if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' after array assignment");
         return arrDec;
     }
 
     //plain procedure call
     if(peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_PAREN) {
         auto functionCall = parseFunctionCall();
-        expect(TokenType::SEMICOLON, "Expected ';' after function call");
+        if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' after function call");
         return functionCall;
     }
 
@@ -281,14 +384,9 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 
         shared_ptr<ASTNode> value;
 
-        //function call: id()
-        if(peek2().type == TokenType::L_PAREN) {
-            value = parseFunctionCall();
-        } else {
-            value = parseExpression();
-        }
+        value = parseExpression();
 
-        expect(TokenType::SEMICOLON, "Expected ';' at the end of declaration");
+        if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' at the end of declaration");
         return make_shared<VariableDeclarationNode>(convertStringToType(varType), varName, value);
     }
 
@@ -303,14 +401,16 @@ shared_ptr<ASTNode> Parser::parseStatement() {
         if (peek2().type == TokenType::L_PAREN) {
             string funcName = tokens[current - 1].raw;
             auto value = parseFunctionCall();
-            expect(TokenType::SEMICOLON, "Expected ';' after function call");
+
+            if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' after function call");
             return make_shared<AssignmentNode>(identifier, value);
         }
 
         // Handle normal assignment
         if (peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER) {
             auto expr = parseExpression();
-            expect(TokenType::SEMICOLON, "Expected ';' at the end of assignment");
+
+            if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' at the end of assignment");
             return make_shared<AssignmentNode>(identifier, expr);
         }
 
@@ -379,8 +479,8 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 
         auto init = parseStatement(); // Parse initialization
         auto condition = parseExpression(); // Parse condition
-        expect(TokenType::SEMICOLON, "Expected ';' after condition");
-        auto update = parseStatement(); // Parse update
+        if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' after condition");
+        auto update = parseStatement(false); // Parse update
         expect(TokenType::R_PAREN, "Expected ')' after update expression");
 
         expect(TokenType::L_BRACE, "Expected '{' to start 'for' block");
@@ -396,13 +496,13 @@ shared_ptr<ASTNode> Parser::parseStatement() {
     //return, goto, continue, break
     if (peek().type == TokenType::KEYWORD) {
         auto keywordType = peek().keyword;
+        string name = peek().raw;
         advance();
-        string name = tokens[current - 1].raw;
 
         if(peek().type == TokenType::LABEL) {
             expect(TokenType::LABEL, "Expected label after 'goto'");
             string label = tokens[current - 1].raw.erase(0, 1);
-            expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
+            if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
             return make_shared<GotoNode>(label);
         }
 
@@ -420,11 +520,11 @@ shared_ptr<ASTNode> Parser::parseStatement() {
 
             auto expr = parseExpression();
             string expression = tokens[current - 1].raw;
-            expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
+            if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
 
             return make_shared<ReturnValueNode>(expr);
         } else {
-            expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
+            if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
             return make_shared<ReturnNode>();
         }
     }

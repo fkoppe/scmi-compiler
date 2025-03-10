@@ -6,8 +6,26 @@ void main(){
     //@printStr(output)
     //=>
 
-    int out_length = @length(output);
-    for(int i = 0; !(i < out_length); i = i + 1;){
-        @output(output[i]);
+    //int out_length = @length(output);
+    //for(int i = 0; !(i < out_length); i = i + 1;){
+    //    @output(output[i]);
+
+    //    int a = ggt(3) + 1;
+    //}
+
+    while(1 == 1) {
+        ggt();
+
+        int y = 0;
+        y++;
+        y--;
+        y += 1;
+        y -= 1;
+        y *= 1;
+        y /= 1;
+        y %= 1;
     }
 }
+
+void ggt() {
+    }

@@ -18,12 +18,13 @@ int main(int argc, char* argv[]) {
     //Koppe
     // string path = "../../";
 
-    if (argc < 2) {
+    /*if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <file_path>" << std::endl;
         return 1;
-    }
+    }*/
 
-    string inputFile = argv[1];
+    //string inputFile = argv[1];
+    string inputFile = "../../code.sc";
     string outputFile = "output.mi";
 
 
