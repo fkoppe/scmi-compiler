@@ -174,21 +174,7 @@ std::shared_ptr<ASTNode> Parser::parsePrimaryExpression() {
         if (peek2().type == TokenType::L_PAREN) {
             return parseFunctionCall();
         } else {
-            int index = -1;
-            string name;
-            if (arrayIndexIdent) {
-                name = tokens[current].raw;
-                advance();
-                advance();
-                index = stoi(tokens[current].raw);
-                advance();
-                expect(TokenType::R_BRACK, "Expected ']'");
-            }
-            else {
-                name = tokens[current].raw;
-                advance();
-            }
-            return std::make_shared<IdentifierNode>(name, index);
+            return parseIdentifier(arrayIndexIdent);
         }
     }
     else if (match(TokenType::L_PAREN)) { // Handling `(expression)`
@@ -410,37 +396,27 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
     }
 
     bool arrayIndexIdent = isArrayIndexIdentifier();
-    // Handle assignment: identifier = ... ;
+    // Handle assignment: identifier = ... or identifier [ <expression> ] = ...
     if (peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::ASSIGN || arrayIndexIdent) {
-        string identifier;
-        int index = -1;
-        if (arrayIndexIdent) {
-            identifier = tokens[current].raw;
-            advance();
-            advance();
-            index = stoi(tokens[current].raw);
-            advance();
-            expect(TokenType::R_BRACK, "Expected ']'");
-        }
-        else {
-            identifier = tokens[current].raw;
-            advance();
-        }
+        shared_ptr<IdentifierNode> identifier = parseIdentifier(arrayIndexIdent);
+
         expect(TokenType::ASSIGN, "Expected '=' in assignment");
 
         //function call
         if (peek2().type == TokenType::L_PAREN) {
             string funcName = tokens[current - 1].raw;
             auto value = parseFunctionCall();
+
             if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' after function call");
-            return make_shared<AssignmentNode>(make_shared<IdentifierNode>(identifier, index), value);
+            //return make_shared<AssignmentNode>(make_shared<IdentifierNode>(identifier), value);
         }
 
         // Handle normal assignment
         if (peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER) {
             auto expr = parseExpression();
+
             if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' at the end of assignment");
-            return make_shared<AssignmentNode>(make_shared<IdentifierNode>(identifier, index), expr);
+            //return make_shared<AssignmentNode>(make_shared<IdentifierNode>(identifier), expr);
         }
 
         cerr << "Parse Error: Unexpected token in statement: " << peek().getTypeName() << " '" << peek().raw << "' "<< peek().where() << "\n";
@@ -611,8 +587,24 @@ shared_ptr<ASTNode> Parser::parseArrayDeclaration() {
     return make_shared<ArrayDeclarationNode>(convertStringToType(arrayTypeName+"[]"), size, arrayValues, arrayName);
 }
 
+shared_ptr<IdentifierNode> Parser::parseIdentifier(bool isArrayIndex) {
+    shared_ptr<ASTNode> index = nullptr;
+    string name;
+
+    name = tokens[current].raw;
+    advance(); //identifier Name
+
+    if (isArrayIndex) {
+        advance(); //[
+        index = parseExpression();
+        expect(TokenType::R_BRACK, "Expected ']'");
+    }
+
+    return std::make_shared<IdentifierNode>(name, index);
+}
+
 bool Parser::isArrayIndexIdentifier() {
-    return peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_BRACK && peek3().type == TokenType::NUMBER;
+    return peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_BRACK;
 }
 
 

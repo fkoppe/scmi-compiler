@@ -4,13 +4,7 @@ project(scmi-compiler)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(scmi source/main.cpp
-        source/token.cpp
-    source/ast.h
-        source/generator.hpp
-        source/generator.cpp
-        source/analyzer.hpp
-        source/analyzer.cpp
-        source/Keyword.hpp)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 add_subdirectory(source)
+add_subdirectory(source_output)

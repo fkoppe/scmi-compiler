@@ -36,6 +36,7 @@ public:
     shared_ptr<ASTNode> parseFunctionCall();
     shared_ptr<ASTNode> parseStatement(bool semicolon = true);
     shared_ptr<ASTNode> parseArrayDeclaration();
+    shared_ptr<IdentifierNode> parseIdentifier(bool);
 
     bool isArrayIndexIdentifier();
 

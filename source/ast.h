@@ -2,6 +2,7 @@
 #define AST_H
 
 #include <memory>
+#include <utility>
 #include <vector>
 #include <iostream>
 
@@ -32,18 +33,20 @@ public:
 class IdentifierNode : public ASTNode {
 public:
     string name;
-    int index;
+    shared_ptr<ASTNode> index;
 
-    explicit IdentifierNode(string n) : name(move(n)), index(-1) {}
-    explicit IdentifierNode(string n, int index) : name(move(n)), index(index) {}
+    explicit IdentifierNode(string n) : name(move(n)), index(nullptr) {}
+    explicit IdentifierNode(string n, shared_ptr<ASTNode> index) : name(move(n)), index(move(index)) {}
 
 
     void print(int indent = 0) const override {
-        if (index == -1) {
+        if (index == nullptr) {
             cout << string(indent, ' ') << "Identifier(" << name << ")\n";
         }
         else {
-            cout << string(indent, ' ') << "Identifier(" << name<<"["<<index << "])\n";
+            cout << string(indent, ' ') << "Identifier(" << name<<"[" << endl;
+            index->print(indent + 2);
+            cout << string(indent, ' ') << "]\n";
         }
     }
 };
@@ -180,7 +183,8 @@ enum class LogicalType {
     LESS_THAN,      // <
     GREATER_THAN,   // >
     LESS_EQUAL,     // <=
-    GREATER_EQUAL   // >=
+    GREATER_EQUAL,   // >=
+    NOT
 };
 
 // AST Node for logical expressions (x && y, a || b)

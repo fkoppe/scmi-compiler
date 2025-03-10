@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 
 #include "generator.hpp"
@@ -8,12 +9,27 @@
 #include "analyzer.hpp"
 #include "rewriter.hpp"
 
-int main() {
+void writeFile(string output, string filename);
+
+int main(int argc, char* argv[]) {
     //auto tokens = lexString(readFile("../code.sc"));
+    //Beck
+    //string path = "../";
+    //Koppe
+    // string path = "../../";
+
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <file_path>" << std::endl;
+        return 1;
+    }
+
+    string inputFile = argv[1];
+    string outputFile = "output.mi";
+
 
     Lexer lexer;
     //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return; if(a) { b = 0; }  }");
-    vector<Token> tokens = lexer.lexText(readFile("../../code.sc"));
+    vector<Token> tokens = lexer.lexText(readFile(inputFile));
 
 
     cout << "\n=== LEXER Output ===\n";
@@ -60,7 +76,9 @@ int main() {
 
 
         cout << "\n=== COMPILE Output ===\n";
-        cout << compile(ast, analysis.first, analysis.second) << endl;
+        string output = compile(ast, analysis.first, analysis.second);
+        cout << output << endl;
+        writeFile(output, outputFile);
         cout << "======================\n";
 
     } catch (const exception& e) {
@@ -68,4 +86,16 @@ int main() {
     }
 
     return 0;
+}
+
+void writeFile(string output, string filename) {
+    std::ofstream file(filename);
+
+    if (file.is_open()) {
+        file << output;  // Write the string to the file
+        file.close();  // Close the file
+        std::cout << "File written successfully.\n";
+    } else {
+        std::cerr << "Error opening file!\n";
+    }
 }
