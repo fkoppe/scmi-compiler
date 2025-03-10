@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUILD_DIR="cmake-build-debug"
+BUILD_DIR="build_cli"
 
 if [ -z "$1" ]; then
     echo "Usage: run.sh <your-script.sc>"
@@ -14,9 +14,10 @@ if [ ! -f "$SCRIPT_FILE" ]; then
     exit 1
 fi
 
-cmake --build ./$BUILD_DIR/
+cmake -B "./build_cli" -G "Unix Makefiles" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE="Release"
+cmake --build ./$BUILD_DIR
 
-./$BUILD_DIR/scmi_compiler "$SCRIPT_FILE" >/dev/null
+./$BUILD_DIR/scmi_output "$SCRIPT_FILE" >/dev/null
 
 java -jar mi-sim-cli.jar output.mi > output.txt
 
