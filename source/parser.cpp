@@ -238,7 +238,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
 
-            return parseStatement();
+            return parseStatement(semicolon);
         }
 
         if(peek2().type == TokenType::SUB && peek3().type == TokenType::SUB) {
@@ -252,7 +252,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
 
-            return parseStatement();
+            return parseStatement(semicolon);
         }
 
         if(peek2().type == TokenType::ADD && peek3().type == TokenType::ASSIGN) {
@@ -265,7 +265,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
 
-            return parseStatement();
+            return parseStatement(semicolon);
         }
 
         if(peek2().type == TokenType::SUB && peek3().type == TokenType::ASSIGN) {
@@ -278,7 +278,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
 
-            return parseStatement();
+            return parseStatement(semicolon);
         }
 
         if(peek2().type == TokenType::MULT && peek3().type == TokenType::ASSIGN) {
@@ -291,7 +291,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
 
-            return parseStatement();
+            return parseStatement(semicolon);
         }
 
         if(peek2().type == TokenType::DIV && peek3().type == TokenType::ASSIGN) {
@@ -304,7 +304,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
 
-            return parseStatement();
+            return parseStatement(semicolon);
         }
 
         if(peek2().type == TokenType::MOD && peek3().type == TokenType::ASSIGN) {
@@ -317,7 +317,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
 
-            return parseStatement();
+            return parseStatement(semicolon);
         }
     }
 
@@ -512,12 +512,6 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
         }
 
         if(peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER || peek().type == TokenType::L_PAREN) {
-            if(peek().type == TokenType::IDENTIFIER && peek2().type == TokenType::L_PAREN) {
-                auto st = parseStatement();
-
-                return make_shared<ReturnValueNode>(st);
-            }
-
             auto expr = parseExpression();
             string expression = tokens[current - 1].raw;
             if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' at the end of statement");
