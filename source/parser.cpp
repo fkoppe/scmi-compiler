@@ -232,11 +232,11 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             advance();
             advance();
 
+            tokens.insert(tokens.begin() + current, one);
+            tokens.insert(tokens.begin() + current, Token(TokenType::ADD));
             tokens.insert(tokens.begin() + current, ident);
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
-            tokens.insert(tokens.begin() + current, Token(TokenType::ADD));
-            tokens.insert(tokens.begin() + current, one);
 
             return parseStatement();
         }
@@ -246,11 +246,11 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             advance();
             advance();
 
+            tokens.insert(tokens.begin() + current, one);
+            tokens.insert(tokens.begin() + current, Token(TokenType::SUB));
             tokens.insert(tokens.begin() + current, ident);
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
-            tokens.insert(tokens.begin() + current, Token(TokenType::SUB));
-            tokens.insert(tokens.begin() + current, one);
 
             return parseStatement();
         }
@@ -260,10 +260,10 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             advance();
             advance();
 
+            tokens.insert(tokens.begin() + current, Token(TokenType::ADD));
             tokens.insert(tokens.begin() + current, ident);
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
-            tokens.insert(tokens.begin() + current, Token(TokenType::ADD));
 
             return parseStatement();
         }
@@ -273,10 +273,10 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             advance();
             advance();
 
+            tokens.insert(tokens.begin() + current, Token(TokenType::SUB));
             tokens.insert(tokens.begin() + current, ident);
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
-            tokens.insert(tokens.begin() + current, Token(TokenType::SUB));
 
             return parseStatement();
         }
@@ -286,10 +286,10 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             advance();
             advance();
 
+            tokens.insert(tokens.begin() + current, Token(TokenType::MULT));
             tokens.insert(tokens.begin() + current, ident);
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
-            tokens.insert(tokens.begin() + current, Token(TokenType::MULT));
 
             return parseStatement();
         }
@@ -299,10 +299,10 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             advance();
             advance();
 
+            tokens.insert(tokens.begin() + current, Token(TokenType::DIV));
             tokens.insert(tokens.begin() + current, ident);
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
-            tokens.insert(tokens.begin() + current, Token(TokenType::DIV));
 
             return parseStatement();
         }
@@ -312,10 +312,10 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             advance();
             advance();
 
+            tokens.insert(tokens.begin() + current, Token(TokenType::MOD));
             tokens.insert(tokens.begin() + current, ident);
             tokens.insert(tokens.begin() + current, Token(TokenType::ASSIGN));
             tokens.insert(tokens.begin() + current, ident);
-            tokens.insert(tokens.begin() + current, Token(TokenType::MOD));
 
             return parseStatement();
         }
@@ -403,7 +403,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             auto value = parseFunctionCall();
 
             if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' after function call");
-            //return make_shared<AssignmentNode>(make_shared<IdentifierNode>(identifier), value);
+            return make_shared<AssignmentNode>(identifier, value);
         }
 
         // Handle normal assignment
@@ -411,7 +411,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             auto expr = parseExpression();
 
             if(semicolon) expect(TokenType::SEMICOLON, "Expected ';' at the end of assignment");
-            //return make_shared<AssignmentNode>(make_shared<IdentifierNode>(identifier), expr);
+            return make_shared<AssignmentNode>(identifier, expr);
         }
 
         cerr << "Parse Error: Unexpected token in statement: " << peek().getTypeName() << " '" << peek().raw << "' "<< peek().where() << "\n";
