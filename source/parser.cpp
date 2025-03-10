@@ -350,12 +350,26 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
         vector<pair<Type, string>> parameters;
         if (!match(TokenType::R_PAREN)) {
             do {
-                expect(TokenType::KEYWORD, "Expected parameter type");
-                string paramType = tokens[current - 1].raw;
+                if (peek().type == TokenType::KEYWORD && peek2().type == TokenType::L_BRACK && peek3().type == TokenType::R_BRACK) {
+                    //auto arrDec = parseArrayDeclaration();
+                    expect(TokenType::KEYWORD, "Expected parameter type");
+                    string paramType = tokens[current - 1].raw;
 
-                expect(TokenType::IDENTIFIER, "Expected parameter name");
-                string paramName = tokens[current - 1].raw;
-                parameters.emplace_back(convertStringToType(paramType), paramName);
+                    advance();
+                    expect(TokenType::R_BRACK, "Expected ]");
+
+                    expect(TokenType::IDENTIFIER, "Expected parameter name");
+                    string paramName = tokens[current - 1].raw;
+                    parameters.emplace_back(convertStringToType(paramType + "[]"), paramName);
+                }
+                else {
+                    expect(TokenType::KEYWORD, "Expected parameter type");
+                    string paramType = tokens[current - 1].raw;
+
+                    expect(TokenType::IDENTIFIER, "Expected parameter name");
+                    string paramName = tokens[current - 1].raw;
+                    parameters.emplace_back(convertStringToType(paramType), paramName);
+                }
             } while (match(TokenType::COMMA));
 
             expect(TokenType::R_PAREN, "Expected ')' at the end of parameter list");

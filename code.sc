@@ -1,31 +1,15 @@
 void main(){
-    //string output = "Hello World";
-    //=>
+    int c = 0;
+
     char[] output = {72,101,108,108,111,32,87,111,114,108,100};
 
-    //@printStr(output)
-    //=>
+    printsln(output);
 
-    //int out_length = @length(output);
-    //for(int i = 0; !(i < out_length); i = i + 1;){
-    //    @output(output[i]);
+    //for(int i = 0; i < 4; i++) {
+           // c = fib(i);
 
-    //    int a = ggt(3) + 1;
+            //println(c);
+            //@output(c + 48);
+            //@output(10);
     //}
-
-    while(1 == 1) {
-        ggt();
-
-        int y = 0;
-        y++;
-        y--;
-        y += 1;
-        y -= 1;
-        y *= 1;
-        y /= 1;
-        y %= 1;
-    }
 }
-
-void ggt() {
-    }
