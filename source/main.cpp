@@ -9,26 +9,17 @@
 #include "analyzer.hpp"
 #include "rewriter.hpp"
 
+//TODO:
+//handle expression (funcCall) in mathExpression
+
+
 void writeFile(string output, string filename);
 
 int main(int argc, char* argv[]) {
-    //auto tokens = lexString(readFile("../code.sc"));
-    //Beck
-    //string path = "../";
-    //Koppe
-    // string path = "../../";
-
-    /*if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <file_path>" << std::endl;
-        return 1;
-    }*/
-
     string inputFile = argv[1];
-    //string inputFile = "../../code.sc";
-
     string outputFile;
     string stdlib;
-    if (argc == 3) {
+    if (argc == 4) {
         outputFile = argv[2];
         stdlib = argv[3];
     }
