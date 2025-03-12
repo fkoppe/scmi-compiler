@@ -3,22 +3,33 @@ short x = 0;
 char x = 0;
 x = 0;
 x = 1+1;
+x += 1;
 x = 1-1;
+x -= 1;
 x = 1*1;
+x *= 1;
 x = 1/1;
+x /= 1;
 x = 1 % 2;
+x %= 2;
 x = (1-1)*2;
 x = a;
 x = a+1;
 x = ggt();
-x = a == b; => always int
+x = a == b; //=> always int
+x =  a && b //=> always int
+x = a || b //=> always int
+x = !a //=> always int
+x = !(a && b) || c && d //=> always int
+x = true;
+x = false;
 x++;
 x--;
 int[] arr = int[4];
 int[] arr = {1,2,3,4};
 x = arr[0];
 arr[0] = x;
-@output(x); => outputs number as ascii
+@output(x); //=> outputs number as ascii
 int l = @length(arr);
 if(a == b){
     x++;
@@ -30,7 +41,7 @@ for(int i = 0; i < l; i++){
     arr[i] = i;
 }
 while (x < l){
-    x = x%2;
+    x = x / 2;
 }
 void main(){return;}
 int ggt(){return 1;}

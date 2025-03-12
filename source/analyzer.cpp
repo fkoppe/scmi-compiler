@@ -220,6 +220,10 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
         checkLogicalExpression(logical_node);
         return Type(TypeType::INT);
     }
+    if (const shared_ptr<LogicalNotNode> logical_not_node = dynamic_pointer_cast<LogicalNotNode>(node)) {
+        checkLogicalExpression(logical_not_node);
+        return Type(TypeType::INT);
+    }
     if (const shared_ptr<ArithmeticNode> arithmetic_node = dynamic_pointer_cast<ArithmeticNode>(node)) {
         return getArithmeticType(arithmetic_node, expected_type);
     }
