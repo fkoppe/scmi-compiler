@@ -113,6 +113,7 @@ vector<Token> Lexer::lexText(const string& text, bool log) {
         if (character == '"') {
             if (str) {
                 lexString(charStr);
+                charStr = "";
             }
             str = !str;
             continue;
