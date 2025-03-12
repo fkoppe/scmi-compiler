@@ -11,12 +11,13 @@ using namespace std;
 
 class Lexer {
 public:
-    vector<Token> lexText(const string& text);
+    vector<Token> lexText(const string& text, bool log);
 private:
     uint64_t line = 1;
     uint64_t num = 0;
     string word;
     vector<Token> result;
+    bool log;
 
     void processWord();
     void lexString(string str);

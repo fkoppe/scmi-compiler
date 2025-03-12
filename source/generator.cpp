@@ -571,8 +571,7 @@ FunctionDescr Function::findFunctionDescr(const string& name) {
             return i;
         }
     }
-    cout << "cannot find function: " << name << endl;
-    exit(-1);
+    throw runtime_error("cannot find function: " + name);
 }
 
 string Function::getNextRegister() {
@@ -583,8 +582,7 @@ string Function::getNextRegister() {
     registerNum++;
     //R15: PC, R14: SP, R13: BP, R12: OutputReg
     if (registerNum > 11) {
-        cout << "register overflow" << endl;
-        exit(-1);
+        throw runtime_error("register overflow");
     }
     return output;
 }

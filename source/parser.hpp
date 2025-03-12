@@ -13,6 +13,7 @@ class Parser {
 private:
     vector<Token> tokens;
     size_t current = 0;
+    bool log;
 
     Token peek();
     Token peek2();
@@ -22,7 +23,7 @@ private:
     void expect(TokenType expected, const string& errorMessage);
 
 public:
-    Parser(vector<Token> tokens);
+    Parser(vector<Token> tokens, bool log);
 
     // Neue Rückgabewerte: AST-Knoten
     shared_ptr<ASTNode> parseExpression();

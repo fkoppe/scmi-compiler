@@ -38,8 +38,7 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
                     string labelName = e->label;
 
                     if (labelNames.count(labelName)) {
-                        cout << "Label " << labelName << " already exists" << endl;
-                        exit(-1);
+                        throw runtime_error("Label " + labelName + " already exists");
                     }
 
                     checkGotoLabelName(labelName);
@@ -50,7 +49,7 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
 
         }
         else {
-            cout << "Function declaration in AST Node not found" << endl;
+            throw runtime_error("Function declaration in AST Node not found");
         }
     }
 
@@ -82,8 +81,7 @@ SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& fun
 
     // Check if the function has a non-void return type but lacks a return statement
     if (function_node->returnType.getEnum() != TypeType::VOID && !checkReturn) {
-        cout << "function '" << name << "' ["<<function_node->returnType.toString()<<"] has no return" << endl;
-        exit(-1);
+        throw runtime_error("function '" + name + "' ["+function_node->returnType.toString()+"] has no return");
     }
 }
 
@@ -91,8 +89,7 @@ SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& fun
 void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declaration) {
     if (const shared_ptr<VariableDeclarationNode> var = dynamic_pointer_cast<VariableDeclarationNode>(node)) {
         if (!declaration) {
-            cout << "Variable declarations are not allowed in ifStatement/Loop in function '"<< this->name << "'" <<endl;
-            exit(-1);
+            throw runtime_error("Variable declarations are not allowed in ifStatement/Loop in function '"+ this->name + "'");
         }
 
         checkDeclaration(var);
@@ -113,8 +110,7 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
     }
     else if (const shared_ptr<ReturnNode>& return_node = dynamic_pointer_cast<ReturnNode>(node)) {
         if (function_node->returnType.getEnum() != TypeType::VOID) {
-            cout << "return value ["<< function_node->returnType.toString() <<"] need to be specified in '"<< function_node->functionName <<"'" << endl;
-            exit(-1);
+            throw runtime_error("return value ["+ function_node->returnType.toString() +"] need to be specified in '"+ function_node->functionName +"'");
         }
     }
     else if (const shared_ptr<IfNode> if_node = dynamic_pointer_cast<IfNode>(node)) {
@@ -139,8 +135,7 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
             checkDeclaration(x);
         }
         else {
-            cout << "First parameter in for loop must be a Variable declaration" << endl;
-            exit(-1);
+            throw runtime_error("First parameter in for loop must be a Variable declaration");
         }
 
         if (auto x = dynamic_pointer_cast<LogicalNode>(for_node->condition)) {
@@ -150,16 +145,14 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
             checkLogicalExpression(x);
         }
         else {
-            cout << "Second parameter in for loop must be a Logical Expression" << endl;
-            exit(-1);
+            throw runtime_error("Second parameter in for loop must be a Logical Expression");
         }
 
         if (auto x = dynamic_pointer_cast<AssignmentNode>(for_node->update)) {
             checkAssignment(x);
         }
         else {
-            cout << "Third parameter in for loop must be a Assignment" << endl;
-            exit(-1);
+            throw runtime_error("Third parameter in for loop must be a Assignment");
         }
 
         for (const auto& x: for_node->body) {
@@ -173,22 +166,19 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
 
         //check if array declaration is size zero
         if (array->size == 0 && array->arrayValues.size() == 0) {
-            cout << "Array '" << array->name << "' is empty" << endl;
-            exit(-1);
+            throw runtime_error("Array '" + array->name + "' is empty");
         }
 
         //check type of each declared variable element expression
         for (auto x: array->arrayValues) {
             if (getVariableType(x, arrayVarType).getEnum() != arrayVarType.getEnum()) {
-                cout << "invalid Number Type for Array declaration" << endl;
-                exit(-1);
+                throw runtime_error("invalid Number Type for Array declaration");
             }
         }
     }
     else if (const shared_ptr<GotoNode> goto_node = dynamic_pointer_cast<GotoNode>(node)) {
         if (!this->labelNames.count(goto_node->label)) {
-            cout << "Goto '" << goto_node->label << "' does not exist" << endl;
-            exit(-1);
+            throw runtime_error("Goto '" + goto_node->label + "' does not exist");
         }
     }
 }
@@ -222,8 +212,7 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
         if (expected_type.getEnum() == TypeType::CHAR && number_node->value <= maxChar && number_node->value >= minChar) {
             return Type(TypeType::CHAR);
         }
-        cout << "Invalid number: " << number_node->value << " for type '" << expected_type.toString() << "' in function '" << this->name << "'" << endl;
-        exit(-1);
+        throw runtime_error("Invalid number: " + to_string(number_node->value) + " for type '" + expected_type.toString() + "' in function '" + this->name + "'");
     }
 
     //Logical Nodes are always INT
@@ -259,8 +248,7 @@ void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
 
         }
         else {
-            cout << "Invalid number: " << number_node->value << endl;
-            exit(-1);
+            throw runtime_error("Invalid number: " + number_node->value);
         }
     }
     else if (shared_ptr<ArithmeticNode> arithmetic_node = dynamic_pointer_cast<ArithmeticNode>(node)) {
@@ -273,8 +261,7 @@ void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
 
 void SemanticAnalyzer::checkIndex(const shared_ptr<ASTNode>& index) {
     if (getVariableType(index, Type(TypeType::INT)).getEnum() != TypeType::INT) {
-        cout << "invalid type for index" << endl;
-        exit(-1);
+        throw runtime_error("invalid type for index");
     }
 }
 
@@ -297,16 +284,14 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
         vector<pair<string,Type>> params;
 
         if (function_call_node->arguments.size() != 1) {
-            cout << "Invalid number of arguments for " << OUTPUT_FUNCTION << endl;
-            exit(-1);
+            throw runtime_error("Invalid number of arguments for " + OUTPUT_FUNCTION);
         }
 
         shared_ptr<ASTNode> argument = function_call_node->arguments.at(0);
 
         Type type = getVariableType(argument, Type(TypeType::INT));
         if (type.getEnum() != TypeType::INT) {
-            cout << "invalid type for argument in " << OUTPUT_FUNCTION << endl;
-            exit(-1);
+            throw runtime_error("invalid type for argument in " + OUTPUT_FUNCTION);
         }
 
         params.emplace_back("", type);
@@ -319,23 +304,20 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
         vector<pair<string,Type>> params;
 
         if (function_call_node->arguments.size() > 1) {
-            cout << "Only one parameter allowed in @length function" << endl;
-            exit(-1);
+            throw runtime_error("Only one parameter allowed in @length function");
         }
 
         auto node = function_call_node->arguments.at(0);
 
         if (auto x = dynamic_pointer_cast<IdentifierNode>(node)) {
             if (!variableList.at(x->name).isArray()) {
-                cout << "Parameter in @length function must be type array" << endl;
-                exit(-1);
+                throw runtime_error("Parameter in @length function must be type array");
             }
 
             params.emplace_back("",variableList.at(x->name));
         }
         else {
-            cout << "Parameter in @length function must be type array" << endl;
-            exit(-1);
+            throw runtime_error("Parameter in @length function must be type array");
         }
 
         call_func = {function_call_node->functionName, Type(TypeType::INT), params};
@@ -343,14 +325,12 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
 
 
     if (!found) {
-        cout << "Function call '" << function_call_node->functionName << "' in '" << this->name << "' not found" << endl;
-        exit(-1);
+        throw runtime_error("Function call '" + function_call_node->functionName + "' in '" + this->name + "' not found");
     }
 
     //check params
     if (function_call_node->arguments.size() != call_func.params.size()) {
-        cout << "Function call '" << function_call_node->functionName << "' in '" << this->name << "' does not have the correct number of arguments" << endl;
-        exit(-1);
+        throw runtime_error("Function call '" + function_call_node->functionName + "' in '" + this->name + "' does not have the correct number of arguments");
     }
 
 
@@ -365,15 +345,13 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
 
 void SemanticAnalyzer::checkIdentifierType(string nameA, Type typeA, string nameB, Type typeB) {
     if (typeA.getEnum() != typeB.getEnum()) {
-        cout << "Invalid type assignment with '" << nameA << "' [" << typeA.toString() << "] and '" << nameB << "' [" << typeB.toString() << "] in function '" << this->name << "'" << endl;
-        exit(-1);
+        throw runtime_error("Invalid type assignment with '" + nameA + "' [" + typeA.toString() + "] and '" + nameB + "' [" + typeB.toString() + "] in function '" + this->name + "'");
     }
 }
 
 void SemanticAnalyzer::checkIdentifier(const shared_ptr<IdentifierNode>& identifier) {
     if (!variableList.count(identifier->name)) {
-        cout << "Variable '" << identifier->name << "' in function '" << name << "' does not exist" << endl;
-        exit(-1);
+        throw runtime_error("Variable '" + identifier->name + "' in function '" + name + "' does not exist");
     }
 }
 
@@ -391,7 +369,7 @@ void SemanticAnalyzer::checkParams() {
     for (const auto&[name, type]: ownDescr.params) {
         checkForbiddenIdentifier(name);
         if (!variableList.try_emplace(name, type).second) {
-            cout << "Parameter '" << name << "' for function '"<< this->name << "' already exists" << endl;
+            throw runtime_error("Parameter '" + name + "' for function '"+ this->name + "' already exists");
         }
     }
 }
@@ -419,8 +397,7 @@ Type SemanticAnalyzer::getArithmeticType(const shared_ptr<ArithmeticNode>& arith
     if (left.getEnum() == right.getEnum()) {
         return left;
     }
-    cout << "Arithmetic Expression has not the same type [" << expected.toString() << "] in function '" << this->name << "'" << endl;
-    exit(-1);
+    throw runtime_error("Arithmetic Expression has not the same type [" + expected.toString() + "] in function '" + this->name + "'");
 }
 
 /**
@@ -434,8 +411,7 @@ void SemanticAnalyzer::checkDeclaration(const shared_ptr<VariableDeclarationNode
 
     Type type = {var->varType};
     if (!variableList.try_emplace(var->varName, type).second) {
-        cout << "Variable '" << var->varName << "' in function '" << name << "' is already declared" << endl;
-        exit(-1);
+        throw runtime_error("Variable '" + var->varName + "' in function '" + name + "' is already declared");
     }
 }
 
@@ -477,14 +453,12 @@ string SemanticAnalyzer::getName() {
 
 void checkForbiddenIdentifier(const string& name) {
     if (FORBIDDEN_IDENTIFIER_NAMES.count(name)) {
-        cout << "forbidden identifier name:" << name << endl;
-        exit(-1);
+        throw runtime_error("forbidden identifier name:" + name);
     }
 
     for (const auto& x : FORBIDDEN_SUBSTRING) {
         if (name.find(x) != std::string::npos) {
-            std::cout << "forbidden substring found in identifier: " << name << std::endl;
-            exit(-1);
+            throw runtime_error("forbidden substring found in identifier: " + name);
         }
     }
 }
@@ -494,21 +468,18 @@ void checkFunctionNames(const vector<FunctionDescr>& function_descrs) {
 
     for (const FunctionDescr& x: function_descrs) {
         if (names.count(x.name)) {
-            cout << "Function name: '" << x.name << "' already exists" << endl;
-            exit(-1);
+            throw runtime_error("Function name: '" + x.name + "' already exists");
         }
         names.insert(x.name);
     }
 
     if (!names.count("main")) {
-        cout << "Cannot find 'main' function" << endl;
-        exit(-1);
+        throw runtime_error("Cannot find 'main' function");
     }
 }
 
 void checkGotoLabelName(const string &name) {
     if (name[0] == '_' && name[1] == '_' && name[name.length()-1] == '_' && name[name.length()-2] == '_') {
-        cout << "Invalid label name: " << name << endl;
-        exit(-1);
+        throw runtime_error("Invalid label name: " + name);
     }
 }

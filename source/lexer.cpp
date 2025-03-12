@@ -54,7 +54,7 @@ void Lexer::processWord() {
             result.push_back(r);
         }
 
-        cout << word << " ";
+        if (log) cout << word << " ";
         word.clear();
 
         return;
@@ -69,7 +69,7 @@ void Lexer::processWord() {
         token.keyword = toKeywordType(word);
     }
 
-    cout << word << " ";
+    if (log) cout << word << " ";
     result.push_back(token);
 
     word.clear();
@@ -95,7 +95,8 @@ void Lexer::lexString(string str) {
 
 }
 
-vector<Token> Lexer::lexText(const string& text) {
+vector<Token> Lexer::lexText(const string& text, bool log) {
+    this->log = log;
     bool started_word = false;
     bool skipping_line = false;
     bool str = false;
@@ -104,7 +105,7 @@ vector<Token> Lexer::lexText(const string& text) {
     const unordered_set stopSymbols = {'(', ')', '{', '}', '[', ']', ';', ',', '=', '<', '>', '!', '&', '|', '\n', '\t', ' ', '+', '-', '*', '/', '%', '"'};
     const unordered_set skipSymbols = {'\r', '\000'};
 
-    cout << "\nLexing input..." << endl;
+    if (log) cout << "\nLexing input..." << endl;
 
     for (size_t i = 0; i < text.size(); i++) {
         const char character = text.at(i);
@@ -188,7 +189,7 @@ vector<Token> Lexer::lexText(const string& text) {
         }
     }
 
-    cout << "\nLexer reached EOF" << endl;
+    if (log) cout << "\nLexer reached EOF" << endl;
 
     return result;
 }

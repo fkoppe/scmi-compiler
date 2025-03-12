@@ -13,9 +13,11 @@
 //handle expression (funcCall) in mathExpression
 
 
-void writeFile(string output, string filename);
+void writeFile(string output, string filename, bool log);
 
 int main(int argc, char* argv[]) {
+    bool log = false;
+
     string inputFile = argv[1];
     string outputFile;
     string stdlib;
@@ -39,73 +41,94 @@ int main(int argc, char* argv[]) {
     file_data.append(std_data);
 
 
-    vector<Token> tokens = lexer.lexText(file_data);
+    vector<Token> tokens = lexer.lexText(file_data, log);
 
 
-    cout << "\n=== LEXER Output ===\n";
-    printToken(tokens);
-    cout << "====================\n";
+    if (log) {
+        cout << "\n=== LEXER Output ===\n";
+        printToken(tokens);
+        cout << "====================\n";
 
-    try {
-        Parser parser = Parser(tokens);
-        auto ast = parser.parse();
+        try {
+            Parser parser = Parser(tokens, log);
+            auto ast = parser.parse();
 
-        cout << "\n=== AST Output ===\n";
-        for (const auto& node : ast) {
-            node->print();
+            cout << "\n=== AST Output ===\n";
+            for (const auto& node : ast) {
+                node->print();
+            }
+            cout << "==================\n";
+
+
+
+            // Run semantic analysis
+            std::cout << "\n=== Running Semantic Analysis ===\n";
+
+            auto analysis = analyze(ast);
+
+            cout << "Semantic analysis successful!\n";
+            std::cout << "=================================\n";
+
+
+            std::cout << "\n=== Running Rewriter ===\n";
+
+            Rewriter rewriter;
+            cout << "Rewritten:\n";
+            for(auto root : ast) {
+                rewriter.rewrite(root);
+                root->print();
+            }
+
+
+            cout << "\n\nOptimize:\n";
+            for(auto root : ast) {
+                rewriter.optimize(root);
+            }
+
+            std::cout << "=========================\n";
+
+
+            cout << "\n=== COMPILE Output ===\n";
+            string output = compile(ast, analysis.first, analysis.second);
+            cout << output << endl;
+            writeFile(output, outputFile, log);
+            cout << "======================\n";
+
+        } catch (const exception& e) {
+            cerr << e.what() << "\n";
         }
-        cout << "==================\n";
 
-
-
-        // Run semantic analysis
-        std::cout << "\n=== Running Semantic Analysis ===\n";
-
-        auto analysis = analyze(ast);
-
-        cout << "Semantic analysis successful!\n";
-        std::cout << "=================================\n";
-
-
-        std::cout << "\n=== Running Rewriter ===\n";
-
-        Rewriter rewriter;
-        cout << "Rewritten:\n";
-        for(auto root : ast) {
-            rewriter.rewrite(root);
-            root->print();
+    } else {
+        try {
+            Parser parser = Parser(tokens, log);
+            auto ast = parser.parse();
+            auto analysis = analyze(ast);
+            Rewriter rewriter;
+            for(auto root : ast) {
+                rewriter.rewrite(root);
+            }
+            for(auto root : ast) {
+                rewriter.optimize(root);
+            }
+            string output = compile(ast, analysis.first, analysis.second);
+            writeFile(output, outputFile, log);
+        } catch (const exception& e) {
+            cerr << e.what() << "\n";
         }
-
-
-        cout << "\n\nOptimize:\n";
-        for(auto root : ast) {
-            rewriter.optimize(root);
-        }
-
-        std::cout << "=========================\n";
-
-
-        cout << "\n=== COMPILE Output ===\n";
-        string output = compile(ast, analysis.first, analysis.second);
-        cout << output << endl;
-        writeFile(output, outputFile);
-        cout << "======================\n";
-
-    } catch (const exception& e) {
-        cerr << e.what() << "\n";
     }
+
 
     return 0;
 }
 
-void writeFile(string output, string filename) {
+void writeFile(string output, string filename, bool log) {
     std::ofstream file(filename);
 
     if (file.is_open()) {
         file << output;  // Write the string to the file
         file.close();  // Close the file
-        std::cout << "File written successfully.\n";
+        if (log) std::cout << "File written successfully.\n";
     } else {
-        std::cerr << "Error opening file!\n";
+        throw runtime_error("Error opening file!");
     }
 }

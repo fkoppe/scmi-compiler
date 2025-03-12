@@ -105,7 +105,7 @@ public:
     KeywordType keyword;
     NumberType number;
 
-    const char* getTypeName();
+    const string getTypeName();
 
     string where();
 };

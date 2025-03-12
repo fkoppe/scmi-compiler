@@ -20,6 +20,8 @@ rm ./output.txt
 cmake -B "./build_cli" -G "Unix Makefiles" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE="Release"
 cmake --build ./$BUILD_DIR
 
+echo
+
 ./$BUILD_DIR/scmi_compiler "$SCRIPT_FILE"
 
 # check of output.mi exist, if not end script with error "error while compiling"

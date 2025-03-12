@@ -56,7 +56,7 @@ Token::Token(TokenType type_) {
     type = type_;
 }
 
-const char* Token::getTypeName(){
+const string Token::getTypeName(){
     switch (type) {
     case TokenType::KEYWORD:
         return "keyword";

@@ -5,7 +5,8 @@
 #include <iostream>
 #include <memory>
 
-Parser::Parser(vector<Token> tokens_) {
+Parser::Parser(vector<Token> tokens_, bool log) {
+    this->log = log;
     tokens = tokens_;
 }
 
@@ -38,8 +39,7 @@ bool Parser::match(TokenType expected) {
 // Expect a specific token, throw error if missing
 void Parser::expect(TokenType expected, const string& errorMessage) {
     if (!match(expected)) {
-        cerr << "Parse Error: " << errorMessage << " but found " << peek().getTypeName() << " '" << peek().raw << "' instead " << peek().where() << endl;
-        exit(1);
+        throw runtime_error("Parse Error: " + errorMessage + " but found " + peek().getTypeName() + " '" + peek().raw + "' instead " + peek().where());
     }
 }
 
@@ -79,8 +79,7 @@ std::shared_ptr<ASTNode> Parser::parseComparisonExpression() {
             if (match(TokenType::ASSIGN)) { // `==`
                 left = std::make_shared<LogicalNode>(LogicalType::EQUAL, left, parseAdditiveExpression());
             } else {
-                std::cerr << "Parse Error: Expected '==' but found only '='\n";
-                exit(1);
+                throw runtime_error("Parse Error: Expected '==' but found only '='");
             }
         }
         else if (match(TokenType::NOT)) {
@@ -183,11 +182,10 @@ std::shared_ptr<ASTNode> Parser::parsePrimaryExpression() {
         return expr;
     }
     else {
-        std::cerr << "Parse Error: Invalid expression: "
-                  << tokens[current - 1].getTypeName()
-                  << " '" << tokens[current - 1].raw << "' "
-                  << tokens[current - 1].where() << "\n";
-        exit(1);
+        throw runtime_error("Parse Error: Invalid expression: "
+                  + tokens[current - 1].getTypeName()
+                  + " '" + tokens[current - 1].raw + "' "
+                  + tokens[current - 1].where());
     }
 
     return nullptr; // Should never reach this.
@@ -428,8 +426,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
             return make_shared<AssignmentNode>(identifier, expr);
         }
 
-        cerr << "Parse Error: Unexpected token in statement: " << peek().getTypeName() << " '" << peek().raw << "' "<< peek().where() << "\n";
-        exit(1);
+        throw runtime_error( "Parse Error: Unexpected token in statement: " + peek().getTypeName() + " '" + peek().raw + "' "+ peek().where());
     }
 
     // Handle `if` statement
@@ -521,8 +518,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
         }
 
         if(keywordType != KeywordType::RETURN) {
-            cerr << "Parse Error: Unexpected keyword: " <<  tokens[current - 1].getTypeName() << " '" << tokens[current - 1].raw << "' " <<  tokens[current - 1].where() << "\n";
-            exit(1);
+            throw runtime_error("Parse Error: Unexpected keyword: " +  tokens[current - 1].getTypeName() + " '" + tokens[current - 1].raw + "' " + tokens[current - 1].where());
         }
 
         if(peek().type == TokenType::IDENTIFIER || peek().type == TokenType::NUMBER || peek().type == TokenType::L_PAREN) {
@@ -543,8 +539,7 @@ shared_ptr<ASTNode> Parser::parseStatement(bool semicolon) {
         return make_shared<LabelNode>(label);
     }
 
-    cerr << "Parse Error: Unexpected statement: " << peek().getTypeName() << " '" << peek().raw << "' " << peek().where() << "\n";
-    exit(1);
+    throw runtime_error("Parse Error: Unexpected statement: " + peek().getTypeName() + " '" + peek().raw + "' " + peek().where());
 }
 
 shared_ptr<ASTNode> Parser::parseArrayDeclaration() {
@@ -613,7 +608,7 @@ bool Parser::isArrayIndexIdentifier() {
 
 // Main parse function
 vector<shared_ptr<ASTNode>> Parser::parse() {
-    cout << "\nParsing " << tokens.size() << " tokens..." << endl;
+    if (log) cout << "\nParsing " << tokens.size() << " tokens..." << endl;
 
     vector<shared_ptr<ASTNode>> ast;
 
@@ -621,7 +616,7 @@ vector<shared_ptr<ASTNode>> Parser::parse() {
         ast.push_back(parseStatement());
     }
 
-    cout << "AST size of " << ast.size() << " nodes" << endl;
+    if (log) cout << "AST size of " << ast.size() << " nodes" << endl;
 
     return ast;
 }

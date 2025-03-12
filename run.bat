@@ -18,6 +18,8 @@ if exist output.txt del output.txt
 
 cmake --build %BUILD_DIR%/
 
+echo
+
 %BUILD_DIR%\scmi_compiler "%SCRIPT_FILE%"
 
 :: Check if output.mi exists, if not exit with an error

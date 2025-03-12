@@ -8,6 +8,7 @@ using namespace std;
 string readFile(const string &path);
 
 int main(int argc, char* argv[]) {
+    bool log = false;
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <file_path>" << std::endl;
         return 1;
@@ -62,7 +63,7 @@ int main(int argc, char* argv[]) {
         o1+= to_string(ints[i])+" ";
         o += static_cast<char>(ints[i]);
     }
-    cout << "nums: " << o1 << endl;
+    if (log) cout << "nums: " << o1 << endl;
     cout << o << endl;
     return 0;
 }
