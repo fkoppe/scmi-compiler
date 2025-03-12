@@ -16,7 +16,7 @@
 void writeFile(string output, string filename, bool log);
 
 int main(int argc, char* argv[]) {
-    bool log = false;
+    bool log = true;
 
     string inputFile = argv[1];
     string outputFile;
