@@ -61,7 +61,9 @@ class Function {
         const int ARRAY_DESCRIPTOR_SIZE = 4;
 
         void generateNodes(const vector<shared_ptr<ASTNode>>&);
-        FunctionDescr findFunctionDescr(const string&);
+        FunctionDescr findFunctionDescr(shared_ptr<FunctionCallNode>);
+        FunctionDescr findFunctionDescr(shared_ptr<FunctionDefinitionNode>);
+
         void generateFunctionCall(const shared_ptr<FunctionCallNode>&, const FunctionDescr&);
         void generateAssignment(const LocalVariable& assign_variable, shared_ptr<ASTNode> index, const shared_ptr<ASTNode>& node_expression);
         void generateAssignment(const LocalVariable& assign_variable, const shared_ptr<ASTNode>& node_expression);
@@ -82,6 +84,7 @@ class Function {
         string getVariableAddress(const LocalVariable& local_variable, shared_ptr<ASTNode> index);
         void generateMathExpression(const shared_ptr<ASTNode>&, Type);
         void generateSREF(shared_ptr<FunctionCallNode>);
+        Type getType(shared_ptr<ASTNode>);
 };
 
 #endif //COMPILER_HPP

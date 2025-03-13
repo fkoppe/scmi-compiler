@@ -39,15 +39,15 @@ void generateMallocFunction(string& output) {
 Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const unordered_map<string, Type>& variables, const vector<FunctionDescr>& function_descrs) {
     this->functionName = functionNode->functionName;
     this->function_descr_vector = function_descrs;
-    this->function_descr_own = findFunctionDescr(functionName);
-    this->returnLabel = functionName+"__return__";
+    this->function_descr_own = findFunctionDescr(functionNode);
+    this->returnLabel = function_descr_own.address+"__return__";
     this->localVariablePointerOffset = 0;
     this->paramaterPointerOffset = 0;
     this->jumpLabelNum = 0;
     this->registerNum = 0;
 
     //epilog
-    output += functionName + ":\n";
+    output += function_descr_own.address + ":\n";
 
     if (functionName != "main") {
         output += "PUSHR\n";
@@ -90,7 +90,7 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
                 continue;
             }
 
-            FunctionDescr function_descr = findFunctionDescr(function_call_node->functionName);
+            FunctionDescr function_descr = findFunctionDescr(function_call_node);
             generateFunctionCall(function_call_node, function_descr);
         }
         else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(bodyElement) ) {
@@ -199,7 +199,7 @@ void Function::generateAssignment(const LocalVariable& assign_variable, shared_p
             clearRegisterNum();
         }
         else {
-            FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
+            FunctionDescr function_call_type = findFunctionDescr(function_call_node);
             generateFunctionCall(function_call_node, function_call_type);
             string outputRegister = getNextRegister();
 
@@ -272,7 +272,7 @@ void Function::generateFunctionCall(const shared_ptr<FunctionCallNode>& function
         inputSize += paramType.size();
     }
 
-    output += "CALL " + function_call_node->functionName + "\n";
+    output += "CALL " + function_call_type.address + "\n";
 
     //skip params in stack
     if (inputSize != 0) {
@@ -414,7 +414,7 @@ string Function::getCompareJump(const LogicalType& logical) {
 }
 
 string Function::getNextJumpLabel() {
-    string output = this->functionName+"__jump__"+to_string(jumpLabelNum);
+    string output = this->function_descr_own.address+"__jump__"+to_string(jumpLabelNum);
     jumpLabelNum++;
     return output;
 }
@@ -557,6 +557,31 @@ void Function::generateSREF(shared_ptr<FunctionCallNode> function_call_node) {
     clearRegisterNum();
 }
 
+Type Function::getType(shared_ptr<ASTNode> node) {
+    if (dynamic_pointer_cast<NumberNode>(node)) {
+        return Type(TypeType::INT);
+    }
+    if (auto x = dynamic_pointer_cast<IdentifierNode>(node)) {
+        if (x->index == nullptr) {
+            return localVariableMap.at(x->name).type;
+        }
+        return convertArrayToVarType(localVariableMap.at(x->name).type);
+    }
+    if (auto x = dynamic_pointer_cast<FunctionCallNode>(node)) {
+        return findFunctionDescr(x).type;
+    }
+    if (auto x = dynamic_pointer_cast<ArithmeticNode>(node)) {
+        return Type(TypeType::INT);
+    }
+    if (auto x = dynamic_pointer_cast<LogicalNode>(node)) {
+        return Type(TypeType::INT);
+    }
+    if (auto x = dynamic_pointer_cast<LogicalNotNode>(node)) {
+        return Type(TypeType::INT);
+    }
+    throw runtime_error("Invalid node type in 'getType()'");
+}
+
 //recursive function for post order array
 shared_ptr<ASTNode> Function::getMathExpression(const shared_ptr<ASTNode>& node, vector<MathExpression>& output) {
     if (const shared_ptr<LogicalNode> log = dynamic_pointer_cast<LogicalNode>(node)) {
@@ -574,14 +599,53 @@ shared_ptr<ASTNode> Function::getMathExpression(const shared_ptr<ASTNode>& node,
     return node;
 }
 
-FunctionDescr Function::findFunctionDescr(const string& name) {
-    for (auto & i : function_descr_vector) {
-        if (i.name == name) {
-            return i;
+FunctionDescr Function::findFunctionDescr(shared_ptr<FunctionDefinitionNode> node) {
+    for (auto x: function_descr_vector) {
+        if (x.name == node->functionName) {
+            if (x.params.size() == node->parameters.size()) {
+                bool same = true;
+                for (int i = 0; i < x.params.size(); i++) {
+                    Type type1 = x.params.at(i).second;
+                    Type type2 = node->parameters.at(i).first;
+                    if (type1.getEnum() != type2.getEnum()) {
+                        same = false;
+                    }
+                }
+                if (same) {
+                    return x;
+                }
+            }
         }
     }
-    throw runtime_error("cannot find function: " + name);
+
+    throw runtime_error("cannot find function: " + node->functionName);
 }
+
+FunctionDescr Function::findFunctionDescr(shared_ptr<FunctionCallNode> node) {
+    for (auto x: function_descr_vector) {
+        if (x.name == node->functionName) {
+            if (x.params.size() == node->arguments.size()) {
+                bool same = true;
+                for (int i = 0; i < x.params.size(); i++) {
+                    Type type1 = x.params.at(i).second;
+                    Type type2 = getType(node->arguments.at(i));
+                    if (type1.getEnum() != type2.getEnum()) {
+                        same = false;
+                    }
+                }
+                if (same) {
+                    return x;
+                }
+            }
+        }
+    }
+
+    throw runtime_error("cannot find function: " + node->functionName);
+}
+
+
+
+
 
 string Function::getNextRegister() {
     if (registerNum < 0) {

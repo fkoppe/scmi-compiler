@@ -22,7 +22,6 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
     for (const shared_ptr<ASTNode>& ast : nodes) {
         // Check if the node is a function definition
         if (const shared_ptr<FunctionDefinitionNode> func = dynamic_pointer_cast<FunctionDefinitionNode>(ast)) {
-            functions.push_back(func);
 
             // Extract function parameters and store them as (name, type) pairs
             vector<pair<string,Type>> paramVariables;
@@ -30,8 +29,20 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
                 paramVariables.push_back({p.second, {p.first}});
             }
 
-            function_descrs.push_back({func->functionName, {func->returnType}, paramVariables});
+            int count = 0;
+            string funcName = func->functionName;
+            for (auto x: function_descrs) {
+                if (x.name == func->functionName) {
+                    count++;
+                }
+            }
 
+            if (count != 0) {
+                funcName += "_" + to_string(count);
+            }
+
+            function_descrs.push_back({func->functionName, {func->returnType}, paramVariables, funcName});
+            functions.push_back(func);
             // Iterate over the function body to check for label definitions
             for (const auto& x: func->body) {
                 if (auto e = dynamic_pointer_cast<LabelNode>(x)) {
@@ -68,7 +79,7 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
 
 //Constructor of SemanticAnalyzer
 SemanticAnalyzer::SemanticAnalyzer(const shared_ptr<FunctionDefinitionNode>& function_node, const vector<FunctionDescr>& function_descrs, const unordered_set<string>& labelNames) {
-    name = function_node->functionName;
+    this->name = function_node->functionName;
     this->function_descrs = function_descrs;
     this->function_node = function_node;
     this->checkReturn = false;
@@ -274,6 +285,21 @@ void SemanticAnalyzer::checkIndex(const shared_ptr<ASTNode>& index) {
     }
 }
 
+bool checkSameFunction(FunctionDescr f1, FunctionDescr f2) {
+    if (f1.name == f2.name) {
+            if (f1.params.size() == f2.params.size()) {
+                bool equal = true;
+                for (int i = 0; i < f1.params.size(); i++) {
+                    if (f1.params[i].second.getEnum() != f2.params[i].second.getEnum()) {
+                        equal = false;
+                    }
+                }
+                return equal;
+            }
+    }
+    return false;
+}
+
 FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node, Type expected) {
     FunctionDescr call_func;
     bool found = false;
@@ -364,7 +390,7 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
         }
 
         auto arg1 = function_call_node->arguments.at(0);
-        auto arg2 = function_call_node->arguments.at(0);
+        auto arg2 = function_call_node->arguments.at(1);
 
 
         Type type = getVariableType(arg1, Type(TypeType::INT));
@@ -373,7 +399,7 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
         }
 
         if (!dynamic_pointer_cast<IdentifierNode>(arg2)) {
-            throw runtime_error("second argument is "+SREF_FUNCTION+" has to be an identifier");
+            throw runtime_error("second argument in "+SREF_FUNCTION+" has to be an identifier");
         }
 
 
@@ -415,7 +441,6 @@ void SemanticAnalyzer::checkIdentifier(const shared_ptr<IdentifierNode>& identif
         return;
     }
 
-
     if (!variableList.count(identifier->name)) {
         throw runtime_error("Variable '" + identifier->name + "' in function '" + name + "' does not exist");
     }
@@ -430,7 +455,7 @@ void SemanticAnalyzer::checkAssignment(const shared_ptr<AssignmentNode>& ass) {
 }
 
 void SemanticAnalyzer::checkParams() {
-    FunctionDescr ownDescr = findFunctionDescr(this->name);
+    FunctionDescr ownDescr = findFunctionDescr(function_node, function_descrs);
 
     for (const auto&[name, type]: ownDescr.params) {
         checkForbiddenIdentifier(name);
@@ -481,15 +506,6 @@ void SemanticAnalyzer::checkDeclaration(const shared_ptr<VariableDeclarationNode
     }
 }
 
-FunctionDescr SemanticAnalyzer::findFunctionDescr(const string& name) {
-    for (FunctionDescr x: function_descrs) {
-        if (x.name == name) {
-            return x;
-        }
-    }
-    throw runtime_error("Function '" + name + "' not found");
-}
-
 Type SemanticAnalyzer::findVariable(const string & name) {
     if (SKIP_IDENT_NAMES.count(name)) {
         return Type(TypeType::INT);
@@ -537,15 +553,26 @@ void checkForbiddenIdentifier(const string& name) {
 void checkFunctionNames(const vector<FunctionDescr>& function_descrs) {
     unordered_set<string> names;
 
+    vector<FunctionDescr> checkedFuncs;
+
     for (const FunctionDescr& x: function_descrs) {
-        if (names.count(x.name)) {
-            throw runtime_error("Function name: '" + x.name + "' already exists");
+        for (auto y: checkedFuncs) {
+            if (checkSameFunction(x,y)) {
+                throw runtime_error("Function '" + x.name + "' already exists");
+            }
         }
-        names.insert(x.name);
+        checkedFuncs.push_back(x);
     }
 
-    if (!names.count("main")) {
-        throw runtime_error("Cannot find 'main' function");
+    int count = 0;
+    for (auto y: checkedFuncs) {
+        if (y.name == "main") {
+            count++;
+        }
+    }
+
+    if (count != 1) {
+        throw runtime_error("Could not find main function");
     }
 }
 
@@ -553,4 +580,27 @@ void checkGotoLabelName(const string &name) {
     if (name[0] == '_' && name[1] == '_' && name[name.length()-1] == '_' && name[name.length()-2] == '_') {
         throw runtime_error("Invalid label name: " + name);
     }
+}
+
+FunctionDescr findFunctionDescr(shared_ptr<FunctionDefinitionNode> node, vector<FunctionDescr> vec) {
+    for (int i = 0; i < vec.size(); i++) {
+        FunctionDescr x = vec[i];
+        if (x.name == node->functionName) {
+            if (x.params.size() == node->parameters.size()) {
+                bool same = true;
+                for (int i = 0; i < x.params.size(); i++) {
+                    Type type1 = x.params.at(i).second;
+                    Type type2 = node->parameters.at(i).first;
+                    if (type1.getEnum() != type2.getEnum()) {
+                        same = false;
+                    }
+                }
+                if (same) {
+                    return x;
+                }
+            }
+        }
+    }
+
+    throw runtime_error("cannot find function: " + node->functionName);
 }
