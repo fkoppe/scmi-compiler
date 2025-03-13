@@ -30,93 +30,79 @@ int main(int argc, char* argv[]) {
         outputFile = "./output.mi";
     }
 
+    try {
+        Lexer lexer;
+        //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return; if(a) { b = 0; }  }");
 
-    Lexer lexer;
-    //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return; if(a) { b = 0; }  }");
+        std::string file_data = readFile(inputFile);
+        file_data.append("\n");
 
-    std::string file_data = readFile(inputFile);
-    file_data.append("\n");
-    std::string std_data = readFile(stdlib);
+        vector<Token> tokens = lexer.lexText(file_data, log);
 
-    file_data.append(std_data);
-
-
-    vector<Token> tokens = lexer.lexText(file_data, log);
-
-
-    if (log) {
-        cout << "\n=== LEXER Output ===\n";
+        if (log) cout << "\n=== LEXER Output ===\n";
         printToken(tokens);
-        cout << "====================\n";
+        if (log) cout << "====================\n";
 
-        try {
-            Parser parser = Parser(tokens, log);
-            auto ast = parser.parse();
+        Parser parser = Parser(tokens, log);
+        auto ast = parser.parse();
 
+        if (log) {
             cout << "\n=== AST Output ===\n";
             for (const auto& node : ast) {
                 node->print();
             }
             cout << "==================\n";
-
-
-
-            // Run semantic analysis
-            std::cout << "\n=== Running Semantic Analysis ===\n";
-
-            auto analysis = analyze(ast);
-
-            cout << "Semantic analysis successful!\n";
-            std::cout << "=================================\n";
-
-
-            std::cout << "\n=== Running Rewriter ===\n";
-
-            Rewriter rewriter;
-            cout << "Rewritten:\n";
-            for(auto root : ast) {
-                rewriter.rewrite(root);
-                root->print();
-            }
-
-
-            cout << "\n\nOptimize:\n";
-            for(auto root : ast) {
-                rewriter.optimize(root);
-            }
-
-            std::cout << "=========================\n";
-
-
-            cout << "\n=== COMPILE Output ===\n";
-            string output = compile(ast, analysis.first, analysis.second);
-            cout << output << endl;
-            writeFile(output, outputFile, log);
-            cout << "======================\n";
-
-        } catch (const exception& e) {
-            cerr << e.what() << "\n";
         }
 
-    } else {
-        try {
-            Parser parser = Parser(tokens, log);
-            auto ast = parser.parse();
-            auto analysis = analyze(ast);
-            Rewriter rewriter;
-            for(auto root : ast) {
-                rewriter.rewrite(root);
-            }
-            for(auto root : ast) {
-                rewriter.optimize(root);
-            }
-            string output = compile(ast, analysis.first, analysis.second);
-            writeFile(output, outputFile, log);
-        } catch (const exception& e) {
-            cerr << e.what() << "\n";
+        Lexer std_lexer;
+        std::string std_data = readFile(stdlib);
+        std_data.append("\n");
+        vector<Token> std_tokens = std_lexer.lexText(std_data, false);
+        Parser std_parser = Parser(std_tokens, false);
+        auto std_ast = std_parser.parse();
+
+        if (log) std::cout << "\n=== DEBUG ===\n";
+        for(auto node : std_ast) {
+            ast.push_back(node);
+            node->print();
         }
+
+        // Run semantic analysis
+        if (log) std::cout << "\n=== Running Semantic Analysis ===\n";
+
+        auto analysis = analyze(ast);
+
+        if (log) cout << "Semantic analysis successful!\n";
+        if (log) std::cout << "=================================\n";
+
+
+        if (log) std::cout << "\n=== Running Rewriter ===\n";
+
+        Rewriter rewriter;
+        if (log) cout << "Rewritten:\n";
+        for(auto root : ast) {
+            rewriter.rewrite(root);
+            if (log) root->print();
+        }
+
+
+        if (log) cout << "\n\nOptimize:\n";
+        for(auto root : ast) {
+            if (log) rewriter.optimize(root);
+        }
+
+        if (log) std::cout << "=========================\n";
+
+
+        if (log) cout << "\n=== COMPILE Output ===\n";
+        string output = compile(ast, analysis.first, analysis.second);
+        if (log) cout << output << endl;
+        writeFile(output, outputFile, log);
+        if (log) cout << "======================\n";
+
+    } catch (const exception& e) {
+        cerr << e.what() << "\n";
     }
-
 
     return 0;
 }

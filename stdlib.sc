@@ -53,3 +53,87 @@ void println(int integer) {
     print(integer);
     @output(10);
 }
+
+int malloc(int size) {
+    int s = size;
+    if(s < 8) {
+        s = 8;
+    }
+
+    int plast = 0;
+    int pcurrent = 0;
+    while(current != 0) {
+        int pnext = dref(pcurrent);
+        int plen = pcurrent + 4;
+        int len = dref(pcurrent);
+        if(len >= s) {
+            //found a adequate block
+            @sref(last, pnext);
+            return current;
+
+        } else {
+            pcurrent = pnext;
+        }
+
+        plast = pcurrent;
+    }
+
+    //alloc new
+    int a = @HP;
+    @HP += s;
+
+    return a;
+}
+
+
+int malloc(int size) {
+    int s = size;
+    if (s < 8) {
+        s = 8;
+    }
+
+    int plast = 0;            // previous block address
+    int pcurrent = @FREE;     // current block address
+
+    int pnext = dref(pcurrent);           // next block address (at offset 0)
+    int len = dref(pcurrent + 4);         // size of current block (stored at offset 4)
+    while (pcurrent != 0) {
+        if (len >= s) {
+            // Found an adequate block
+            if (plast == 0) {
+                // removing the head block
+                @FREE = pnext;
+            } else {
+                // updating previous block to skip current block
+                sref(plast, pnext);
+            }
+            // return the address of the usable memory (after metadata)
+            return pcurrent;
+        } else {
+            plast = pcurrent;
+            pcurrent = pnext;
+        }
+    }
+
+    // No suitable block found; allocate new block
+    int a = @HP;
+    @HP += s;
+
+    // return pointer to memory region (after metadata)
+    return a;
+}
+
+
+int free(int size, int address) {
+    int s = size;
+
+    // Store metadata (optional, good practice)
+    sref(address, 0);           // next pointer (0 since allocated block)
+    sref(address + 4, s);       // size of block
+
+    // Insert the freed block at the front of the free list
+    sref(block, @FREE);
+    @FREE = block;
+
+    return 0; // success
+}
