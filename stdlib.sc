@@ -54,37 +54,6 @@ void println(int integer) {
     @output(10);
 }
 
-int malloc(int size) {
-    int s = size;
-    if(s < 8) {
-        s = 8;
-    }
-
-    int plast = 0;
-    int pcurrent = 0;
-    while(current != 0) {
-        int pnext = dref(pcurrent);
-        int plen = pcurrent + 4;
-        int len = dref(pcurrent);
-        if(len >= s) {
-            //found a adequate block
-            @sref(last, pnext);
-            return current;
-
-        } else {
-            pcurrent = pnext;
-        }
-
-        plast = pcurrent;
-    }
-
-    //alloc new
-    int a = @HP;
-    @HP += s;
-
-    return a;
-}
-
 
 int malloc(int size) {
     int s = size + 4;
