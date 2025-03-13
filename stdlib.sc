@@ -87,10 +87,7 @@ int malloc(int size) {
 
 
 int malloc(int size) {
-    int s = size;
-    if (s < 8) {
-        s = 8;
-    }
+    int s = size + 4;
 
     int plast = 0;            // previous block address
     int pcurrent = @FREE;     // current block address
@@ -119,15 +116,17 @@ int malloc(int size) {
     int a = @HP;
     @HP += s;
 
+    sref(a, s);       // size of block
+
     // return pointer to memory region (after metadata)
-    return a;
+    return a + 4;
 }
 
 
-int free(int size, int address) {
-    int s = size;
+int free(int address) {
+    int s = @dref(address-4);
 
-    // Store metadata (optional, good practice)
+    // Store metadata (optionals, good practice)
     sref(address, 0);           // next pointer (0 since allocated block)
     sref(address + 4, s);       // size of block
 
