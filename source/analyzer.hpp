@@ -18,6 +18,9 @@ const unordered_set<string> FORBIDDEN_IDENTIFIER_NAMES = {
 const unordered_set<string> FORBIDDEN_SUBSTRING = {"__return__"};
 const string OUTPUT_FUNCTION = "@output";
 const string LENGTH_FUNCTION = "@length";
+const string DREF_FUNCTION = "@dref";
+const string SREF_FUNCTION = "@sref";
+const unordered_set<string> SKIP_IDENT_NAMES = {"@HP", "@FREE"};
 
 struct FunctionDescr {
     string name;
@@ -61,7 +64,7 @@ private:
     Type getVariableType(const shared_ptr<ASTNode>&, const Type&);
     FunctionDescr findFunctionDescr(const string&);
     Type findVariable(const string&);
-    FunctionDescr checkFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node);
+    FunctionDescr checkFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node, Type expected);
     void checkIdentifierType(string, Type, string, Type);
     void checkIdentifier(const shared_ptr<IdentifierNode>&);
     void checkAssignment(const shared_ptr<AssignmentNode>&);

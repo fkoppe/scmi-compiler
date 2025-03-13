@@ -51,3 +51,7 @@ string str = "Hello World"; //=> char[]
 print()/println() //=> number
 printc()/printcln() //=> ascii character
 prints()/printsln() //=> string
+
+@HP //=> HeapPointer
+@dref(x) //=> !x
+@dref(adr,x) //=> !adr = x, x has to be in localVariableList

@@ -81,6 +81,7 @@ class Function {
         void clearRegisterNum();
         string getVariableAddress(const LocalVariable& local_variable, shared_ptr<ASTNode> index);
         void generateMathExpression(const shared_ptr<ASTNode>&, Type);
+        void generateSREF(shared_ptr<FunctionCallNode>);
 };
 
 #endif //COMPILER_HPP

@@ -59,7 +59,8 @@ pair<vector<FunctionDescr>,unordered_map<string,unordered_map<string,Type>>> ana
     // Perform semantic analysis on each function with the appropriate variable maps
     for (shared_ptr<FunctionDefinitionNode> &node : functions) {
         SemanticAnalyzer analyzer = SemanticAnalyzer(node, function_descrs, labelNames);
-        mapVariableList.insert_or_assign(analyzer.getName(),analyzer.getVariableList());
+        unordered_map<string, Type> varList = analyzer.getVariableList();
+        mapVariableList.insert_or_assign(analyzer.getName(),varList);
     }
 
     return {function_descrs, mapVariableList};
@@ -99,7 +100,7 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
         checkAssignment(ass);
     }
     else if (const shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)) {
-        FunctionDescr function_descr = checkFunctionCall(function_call);
+        FunctionDescr function_descr = checkFunctionCall(function_call, Type(TypeType::VOID));
         checkIdentifierType(function_call->functionName, function_descr.type, "", Type(TypeType::VOID));
     }
     else if (const shared_ptr<ReturnValueNode>& return_value = dynamic_pointer_cast<ReturnValueNode>(node) ) {
@@ -186,6 +187,10 @@ void SemanticAnalyzer::checkNode(const shared_ptr<ASTNode>& node, bool declarati
 //Determines the type of given ASTNode while ensuring it conforms to the expected type.
 Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Type& expected_type) {
     if (shared_ptr<IdentifierNode> ident = dynamic_pointer_cast<IdentifierNode>(node)){
+        if (SKIP_IDENT_NAMES.count(ident->name)) {
+            return Type(TypeType::INT);
+        }
+
         checkIdentifier(ident);
         Type foundType = findVariable(ident->name);
 
@@ -197,7 +202,7 @@ Type SemanticAnalyzer::getVariableType(const shared_ptr<ASTNode>& node, const Ty
         return getCastType(foundType, expected_type);
     }
     if (shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)){
-        FunctionDescr call_func = checkFunctionCall(function_call);
+        FunctionDescr call_func = checkFunctionCall(function_call, expected_type);
         return getCastType(call_func.type, expected_type);
     }
 
@@ -239,7 +244,7 @@ void SemanticAnalyzer::checkExpression(const shared_ptr<ASTNode>& node) {
         }
     }
     else if (shared_ptr<FunctionCallNode> function_call = dynamic_pointer_cast<FunctionCallNode>(node)){
-        FunctionDescr call_func = checkFunctionCall(function_call);
+        FunctionDescr call_func = checkFunctionCall(function_call, Type(TypeType::VOID));
     }
     else if (shared_ptr<NumberNode> number_node = dynamic_pointer_cast<NumberNode>(node)) {
         if (number_node->value < maxInt && number_node->value > minInt) {
@@ -269,7 +274,7 @@ void SemanticAnalyzer::checkIndex(const shared_ptr<ASTNode>& index) {
     }
 }
 
-FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node) {
+FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallNode>& function_call_node, Type expected) {
     FunctionDescr call_func;
     bool found = false;
 
@@ -327,6 +332,57 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
         call_func = {function_call_node->functionName, Type(TypeType::INT), params};
     }
 
+    if (function_call_node->functionName == DREF_FUNCTION) {
+        found = true;
+
+        vector<pair<string,Type>> params;
+
+
+        if (function_call_node->arguments.size() != 1) {
+            throw runtime_error("Invalid number of arguments for " + DREF_FUNCTION +", only 1 argument allowed");
+        }
+
+        auto argument = function_call_node->arguments.at(0);
+
+        Type type = getVariableType(argument, Type(TypeType::INT));
+        if (type.getEnum() != TypeType::INT) {
+            throw runtime_error("invalid type for argument in " + DREF_FUNCTION);
+        }
+
+        params.emplace_back("", type);
+
+        call_func = {function_call_node->functionName, expected, params};
+    }
+
+    if (function_call_node->functionName == SREF_FUNCTION) {
+        found = true;
+
+        vector<pair<string,Type>> params;
+
+        if (function_call_node->arguments.size() != 2) {
+            throw runtime_error("Invalid number of arguments for " + SREF_FUNCTION +", 2 argument accepted");
+        }
+
+        auto arg1 = function_call_node->arguments.at(0);
+        auto arg2 = function_call_node->arguments.at(0);
+
+
+        Type type = getVariableType(arg1, Type(TypeType::INT));
+        if (type.getEnum() != TypeType::INT) {
+            throw runtime_error("invalid type for first argument in " + SREF_FUNCTION);
+        }
+
+        if (!dynamic_pointer_cast<IdentifierNode>(arg2)) {
+            throw runtime_error("second argument is "+SREF_FUNCTION+" has to be an identifier");
+        }
+
+
+        params.emplace_back("", type);
+        params.emplace_back("", getVariableType(arg2, Type(TypeType::INT)));
+
+        call_func = {function_call_node->functionName, Type(TypeType::VOID), params};
+    }
+
 
     if (!found) {
         throw runtime_error("Function call '" + function_call_node->functionName + "' in '" + this->name + "' not found");
@@ -347,6 +403,7 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
     return call_func;
 }
 
+
 void SemanticAnalyzer::checkIdentifierType(string nameA, Type typeA, string nameB, Type typeB) {
     if (typeA.getEnum() != typeB.getEnum()) {
         throw runtime_error("Invalid type assignment with '" + nameA + "' [" + typeA.toString() + "] and '" + nameB + "' [" + typeB.toString() + "] in function '" + this->name + "'");
@@ -354,6 +411,11 @@ void SemanticAnalyzer::checkIdentifierType(string nameA, Type typeA, string name
 }
 
 void SemanticAnalyzer::checkIdentifier(const shared_ptr<IdentifierNode>& identifier) {
+    if (SKIP_IDENT_NAMES.count(identifier->name)) {
+        return;
+    }
+
+
     if (!variableList.count(identifier->name)) {
         throw runtime_error("Variable '" + identifier->name + "' in function '" + name + "' does not exist");
     }
@@ -429,6 +491,11 @@ FunctionDescr SemanticAnalyzer::findFunctionDescr(const string& name) {
 }
 
 Type SemanticAnalyzer::findVariable(const string & name) {
+    if (SKIP_IDENT_NAMES.count(name)) {
+        return Type(TypeType::INT);
+    }
+
+
     auto it = variableList.find(name);
     if (it != variableList.end()) {
         return it->second;

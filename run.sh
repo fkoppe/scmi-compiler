@@ -30,6 +30,6 @@ if [ ! -f "output.mi" ]; then
     exit 1
 fi
 
-java -jar mi-sim-cli.jar output.mi > output.txt
+java -jar mi-sim-cli.jar output.mi | grep R12 > output.txt
 
 ./$BUILD_DIR/scmi_output output.txt

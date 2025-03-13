@@ -21,6 +21,7 @@ string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDesc
         output += function.getOutput();
     }
     generateMallocFunction(output);
+    output += "FREE: DD W 0\n";
     output += "HP: DD W 0\n";
     output += "heap: DD W 0\n";
     output += "END";
@@ -81,6 +82,11 @@ void Function::generateNodes(const vector<shared_ptr<ASTNode>>& node) {
             //treat special output function exclusively
             if (function_call_node->functionName == OUTPUT_FUNCTION) {
                 generateOutputFunction(function_call_node);
+                continue;
+            }
+
+            if (function_call_node->functionName == SREF_FUNCTION) {
+                generateSREF(function_call_node);
                 continue;
             }
 
@@ -181,6 +187,17 @@ void Function::generateAssignment(const LocalVariable& assign_variable, shared_p
             assignment = "!("+assignment+")";
             assignType = Type(TypeType::INT);
         }
+        else if (function_call_node->functionName == DREF_FUNCTION) {
+            string dref_reg = getNextRegister();
+            auto arg = function_call_node->arguments.at(0);
+
+            generateAssignment({Type(TypeType::INT), dref_reg}, arg);
+
+            assignment = "!"+dref_reg;
+            assignType = assign_variable.type;
+
+            clearRegisterNum();
+        }
         else {
             FunctionDescr function_call_type = findFunctionDescr(function_call_node->functionName);
             generateFunctionCall(function_call_node, function_call_type);
@@ -271,6 +288,9 @@ void Function::generateAssignment(const LocalVariable &assign_variable, const sh
 
 //assign all variables addresses and store them in localVariableMap
 int Function::addVariables(const unordered_map<string, Type>& variables) {
+    localVariableMap["@HP"] = {Type(TypeType::INT), "HP"};
+    localVariableMap["@FREE"] = {Type(TypeType::INT), "FREE"};
+
     unordered_set<string> params;
     params.reserve(function_descr_own.params.size());
 
@@ -311,18 +331,6 @@ void Function::generateLogicalExpression(const MathExpression& logical_expressio
 
     LogicalType logType = get<LogicalType>(logical_expression.op);
 
-    //push "left" expression to stack if exist
-    // if (logical_expression.expression_L.address != "") {
-    //     if (logical_expression.expression_L.type.getEnum() != TypeType::INT) {
-    //         output += "MOVE W I 0,-!SP\n";
-    //         output += "MOVE "+logical_expression.expression_L.type.miType()+" "+logical_expression.expression_L.address+",!SP\n";
-    //         generateShift(logical_expression.expression_L.type, {Type(TypeType::INT), "!SP"});
-    //     }
-    //     else {
-    //         output += "MOVE W "+logical_expression.expression_L.address+",-!SP\n";
-    //     }
-    // }
-
     if (logical_expression.expression_L != nullptr) {
         string pushReg = getNextRegister();
         generateAssignment({Type(TypeType::INT),pushReg},logical_expression.expression_L);
@@ -336,18 +344,6 @@ void Function::generateLogicalExpression(const MathExpression& logical_expressio
         output += "MOVE W " + pushReg + ",-!SP\n";
         clearRegisterNum();
     }
-
-    // //push "right" expression to stack if exist
-    // if (logical_expression.expression_R.address != "") {
-    //     if (logical_expression.expression_R.type.getEnum() != TypeType::INT) {
-    //         output += "MOVE W I 0,-!SP\n";
-    //         output += "MOVE "+logical_expression.expression_R.type.miType()+" "+logical_expression.expression_R.address+",!SP\n";
-    //         generateShift(logical_expression.expression_R.type, {Type(TypeType::INT), "!SP"});
-    //     }
-    //     else {
-    //         output += "MOVE W "+logical_expression.expression_R.address+",-!SP\n";
-    //     }
-    // }
 
     if (logType == LogicalType::AND) {
         //ANDNOT s1,s2 => s2 && !s1
@@ -546,6 +542,19 @@ void Function::generateMathExpression(const shared_ptr<ASTNode>& node, Type type
             generateArithmeticExpression(arithmetic_expression, type);
         }
     }
+}
+
+void Function::generateSREF(shared_ptr<FunctionCallNode> function_call_node) {
+    auto arg1 = function_call_node->arguments.at(0);
+    auto arg2 = dynamic_pointer_cast<IdentifierNode>(function_call_node->arguments.at(1));
+
+    Type type2 = convertArrayToVarType(localVariableMap.at(arg2->name).type);
+
+    string arg1_reg = getNextRegister();
+    generateAssignment({Type(TypeType::INT),arg1_reg}, arg1);
+
+    generateAssignment({type2,"!"+arg1_reg}, arg2);
+    clearRegisterNum();
 }
 
 //recursive function for post order array
