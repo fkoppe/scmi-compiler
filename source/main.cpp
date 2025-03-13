@@ -32,7 +32,6 @@ int main(int argc, char* argv[]) {
 
     try {
         Lexer lexer;
-        //vector<Token> tokens = lexer.lexText("  void main(int y,int z){ int x = 5; int a=3;  int y = ggt(); y = ggt(); y = y; y = 1; ggt(); ggt(); return 0; return ggt(); return; if(a) { b = 0; }  }");
 
         std::string file_data = readFile(inputFile);
         file_data.append("\n");
@@ -40,7 +39,7 @@ int main(int argc, char* argv[]) {
         vector<Token> tokens = lexer.lexText(file_data, log);
 
         if (log) cout << "\n=== LEXER Output ===\n";
-        printToken(tokens);
+        if (log) printToken(tokens);
         if (log) cout << "====================\n";
 
         Parser parser = Parser(tokens, log);
@@ -61,10 +60,10 @@ int main(int argc, char* argv[]) {
         Parser std_parser = Parser(std_tokens, false);
         auto std_ast = std_parser.parse();
 
-        if (log) std::cout << "\n=== DEBUG ===\n";
+        //if (log) std::cout << "\n=== DEBUG ===\n";
         for(auto node : std_ast) {
             ast.push_back(node);
-            node->print();
+            //if (log) node->print();
         }
 
         // Run semantic analysis
