@@ -61,8 +61,8 @@ int malloc(int size) {
     int plast = 0;            // previous block address
     int pcurrent = @FREE;     // current block address
 
-    int pnext = dref(pcurrent);           // next block address (at offset 0)
-    int len = dref(pcurrent + 4);         // size of current block (stored at offset 4)
+    int pnext = @dref(pcurrent);           // next block address (at offset 0)
+    int len = @dref(pcurrent + 4);         // size of current block (stored at offset 4)
     while (pcurrent != 0) {
         if (len >= s) {
             // Found an adequate block
@@ -71,7 +71,7 @@ int malloc(int size) {
                 @FREE = pnext;
             } else {
                 // updating previous block to skip current block
-                sref(plast, pnext);
+                @sref(plast, pnext);
             }
             // return the address of the usable memory (after metadata)
             return pcurrent;
@@ -85,7 +85,7 @@ int malloc(int size) {
     int a = @HP;
     @HP += s;
 
-    sref(a, s);       // size of block
+    @sref(a, s);       // size of block
 
     // return pointer to memory region (after metadata)
     return a + 4;
@@ -96,12 +96,12 @@ int free(int address) {
     int s = @dref(address-4);
 
     // Store metadata (optionals, good practice)
-    sref(address, 0);           // next pointer (0 since allocated block)
-    sref(address + 4, s);       // size of block
+    @sref(address, 0);           // next pointer (0 since allocated block)
+    @sref(address + 4, s);       // size of block
 
     // Insert the freed block at the front of the free list
-    sref(block, @FREE);
-    @FREE = block;
+    @sref(address, @FREE);
+    @FREE = address;
 
     return 0; // success
 }
