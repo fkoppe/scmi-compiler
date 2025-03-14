@@ -6,4 +6,12 @@ void main(){
     if(x){
         x++;
     }
+
+    int a = malloc(4);
+    int ninenine = 959;
+    @sref(a, ninenine);
+
+    int x2 = @dref(a);
+
+    print(x2);
 }

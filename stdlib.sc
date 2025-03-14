@@ -96,7 +96,8 @@ int free(int address) {
     int s = @dref(address-4);
 
     // Store metadata (optionals, good practice)
-    @sref(address, 0);           // next pointer (0 since allocated block)
+    int of = 0;
+    @sref(address, of);           // next pointer (0 since allocated block)
     @sref(address + 4, s);       // size of block
 
     // Insert the freed block at the front of the free list
