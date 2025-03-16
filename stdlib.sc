@@ -47,6 +47,7 @@ void print(int integer) {
         @output(digits[i]);
         i = i - 1; // Manual decrement
     }
+    free(digits);
 }
 
 void println(int integer) {
@@ -92,7 +93,7 @@ int malloc(int size) {
 }
 
 
-int free(int address) {
+void free(int address) {
     int s = @dref(address-4);
 
     // Store metadata (optionals, good practice)
@@ -103,6 +104,4 @@ int free(int address) {
     // Insert the freed block at the front of the free list
     @sref(address, @FREE);
     @FREE = address;
-
-    return 0; // success
 }

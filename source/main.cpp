@@ -9,14 +9,10 @@
 #include "analyzer.hpp"
 #include "rewriter.hpp"
 
-//TODO:
-//handle expression (funcCall) in mathExpression
-
-
 void writeFile(string output, string filename, bool log);
 
 int main(int argc, char* argv[]) {
-    bool log = true;
+    bool log = false;
 
     string inputFile = argv[1];
     string outputFile;

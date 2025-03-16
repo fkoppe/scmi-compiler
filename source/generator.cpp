@@ -20,7 +20,6 @@ string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDesc
         Function function = Function(func, variables.at(func->functionName), function_descrs);
         output += function.getOutput();
     }
-    generateMallocFunction(output);
     output += "FREE: DD W 0\n";
     output += "HP: DD W 0\n";
     output += "heap: DD W 0\n";
@@ -28,12 +27,6 @@ string compile(const vector<shared_ptr<ASTNode>>& ast, const vector<FunctionDesc
     return output;
 }
 
-void generateMallocFunction(string& output) {
-    output += "__malloc__:\n";
-    output += "MOVE W HP,8+!SP\n";
-    output += "ADD W 4+!SP,HP\n";
-    output += "RET\n";
-}
 
 //Constructor for each Function generator
 Function::Function(const shared_ptr<FunctionDefinitionNode>& functionNode, const unordered_map<string, Type>& variables, const vector<FunctionDescr>& function_descrs) {
@@ -422,30 +415,6 @@ string Function::getNextJumpLabel() {
 void Function::generateArithmeticExpression(const MathExpression& arithmetic_expression, const Type& expected_type) {
     ArithmeticType ariType = get<ArithmeticType>(arithmetic_expression.op);
 
-    // LocalVariable l = arithmetic_expression.expression_L;
-    // LocalVariable r = arithmetic_expression.expression_R;
-    // if (l.address != "") {
-    //     if (l.type.miType() != expected_type.miType()) {
-    //         output += "MOVE "+expected_type.miType()+" I 0,-!SP\n";
-    //         output += "MOVE "+ l.type.miType() + " " + l.address + ",!SP\n";
-    //         generateShift(l.type, {expected_type,"!SP"});
-    //     }
-    //     else {
-    //         output += "MOVE "+ expected_type.miType() + " " + l.address + ",-!SP\n";
-    //     }
-    // }
-    //
-    // if (arithmetic_expression.expression_R.address != "") {
-    //     if (r.type.miType() != expected_type.miType()) {
-    //         output += "MOVE "+expected_type.miType()+" I 0,-!SP\n";
-    //         output += "MOVE "+ r.type.miType() + " " + r.address + ",!SP\n";
-    //         generateShift(r.type, {expected_type,"!SP"});
-    //     }
-    //     else {
-    //         output += "MOVE "+ expected_type.miType() + " " + r.address + ",-!SP\n";
-    //     }
-    // }
-
     if (arithmetic_expression.expression_L != nullptr) {
         string pushReg = getNextRegister();
         generateAssignment({expected_type,pushReg},arithmetic_expression.expression_L);
@@ -498,7 +467,7 @@ void Function::generateArithmeticOperation(const ArithmeticType arithmetic, cons
 void Function::malloc(int size, const string& assignment) {
     output += "MOVE W I 0,-!SP\n";
     output += "MOVE W I "+ to_string(size) + ",-!SP\n";
-    output += "CALL __malloc__\n";
+    output += "CALL malloc\n";
     output += "ADD W I 4, SP\n";
     output += "MOVE W !SP+,"+assignment+"\n";
 }
@@ -629,8 +598,13 @@ FunctionDescr Function::findFunctionDescr(shared_ptr<FunctionCallNode> node) {
                 for (int i = 0; i < x.params.size(); i++) {
                     Type type1 = x.params.at(i).second;
                     Type type2 = getType(node->arguments.at(i));
+
+
                     if (type1.getEnum() != type2.getEnum()) {
                         same = false;
+                    }
+                    if (type1.getEnum() == TypeType::INT && type2.isArray()) {
+                        same = true;
                     }
                 }
                 if (same) {

@@ -15,16 +15,8 @@
 
 using namespace std;
 
-/*
-TODO:
-- recursion analyze logicalExpression tree -> write in array✅
-- figure out cmp and jump way to set comparsionNode✅
-- output code with array to generate logicalExpression with stack operations✅
-- change vector<LogicalExpression> to add function calls✅
-*/
 
 string compile(const vector<shared_ptr<ASTNode>>&, const vector<FunctionDescr>&, const unordered_map<string, unordered_map<string, Type>>&);
-static void generateMallocFunction(string&);
 
 
 struct LocalVariable {

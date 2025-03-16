@@ -27,6 +27,7 @@ x++;
 x--;
 int[] arr = int[4];
 int[] arr = {1,2,3,4};
+int x = arr; //=> get address of array
 x = arr[0];
 arr[0] = x;
 @output(x); //=> outputs number as ascii
@@ -53,5 +54,13 @@ printc()/printcln() //=> ascii character
 prints()/printsln() //=> string
 
 @HP //=> HeapPointer
+@FREE //=> FreeList
 @dref(x) //=> !x
 @dref(adr,x) //=> !adr = x, x has to be in localVariableList
+
+TODO:
+- variable declaration in if/else/while/for block
+- string concat
+- add char ('x')
+
+

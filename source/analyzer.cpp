@@ -334,6 +334,7 @@ FunctionDescr SemanticAnalyzer::checkFunctionCall(const shared_ptr<FunctionCallN
         call_func = {function_call_node->functionName, Type(TypeType::VOID), params};
     }
 
+
     if (function_call_node->functionName == LENGTH_FUNCTION) {
         found = true;
         vector<pair<string,Type>> params;
@@ -521,6 +522,10 @@ Type SemanticAnalyzer::findVariable(const string & name) {
 
 //casts "lower" type to "higher" type
 Type SemanticAnalyzer::getCastType(Type found, Type expected) {
+    if (expected.getEnum() == TypeType::INT && found.isArray()) {
+        return Type(TypeType::INT);
+    }
+
     int foundNum = static_cast<int>(found.getEnum());
     int expectedNum = static_cast<int>(expected.getEnum());
 
@@ -564,14 +569,30 @@ void checkFunctionNames(const vector<FunctionDescr>& function_descrs) {
         checkedFuncs.push_back(x);
     }
 
-    int count = 0;
+    int c_main = 0;
+    int c_malloc = 0;
+    int c_free = 0;
     for (auto y: checkedFuncs) {
         if (y.name == "main") {
-            count++;
+            c_main++;
+        }
+        if (y.name == "malloc") {
+            c_malloc++;
+        }
+        if (y.name == "free") {
+            c_free++;
         }
     }
 
-    if (count != 1) {
+    if (c_malloc != 1) {
+        throw runtime_error("Could not find malloc function");
+    }
+
+    if (c_free != 1) {
+        throw runtime_error("Could not find free function");
+    }
+
+    if (c_main != 1) {
         throw runtime_error("Could not find main function");
     }
 }
