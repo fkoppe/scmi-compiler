@@ -1,5 +1,4 @@
 - only double, float, int, short, char, (void) identifier types
-- only 2 parameters for arithmetic operation: x+y
 
 
 Functionality:

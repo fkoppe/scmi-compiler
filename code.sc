@@ -1,6 +1,7 @@
 void main(){
     string test = "Hello World";
-    int c = 1;
+    int c = 1+2+3;
+    print(c);
     int x = !c;
     print(x);
     if(x){
